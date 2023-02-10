@@ -1,3 +1,4 @@
 .vscode/
+.task/
 node_modules
-.task
+target

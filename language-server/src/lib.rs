@@ -73,7 +73,7 @@ impl PestLanguageServer {
                 let VersionedTextDocumentIdentifier { uri, version } = params.text_document;
 
                 let updated_doc =
-                    TextDocumentItem::new(uri.clone(), "pest".into(), version, change.text);
+                    TextDocumentItem::new(uri.clone(), "pest".to_owned(), version, change.text);
 
                 if self.upsert_document(updated_doc).is_none() {
                     log(&format!("Updated untracked document {}", uri));
