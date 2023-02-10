@@ -1,0 +1,93 @@
+version: 3
+
+tasks:
+  wasm-pack:
+    desc: Run WASM-pack to compile a web assembly binary of the language server.
+    dir: language-server
+    internal: true
+    
+    method: checksum
+    sources:
+      - src/**/*.rs
+      - '*.toml'
+    
+    cmds:
+      - wasm-pack build --target nodejs --out-dir ../vscode/build
+
+  package-vscode:
+    desc: Package the VSCode extension into a VSIX file.
+    dir: vscode
+    internal: true
+
+    deps:
+      - wasm-pack
+
+    method: checksum
+    sources:
+      - client/**/*
+      - server/**/*
+      - build/*
+      - syntaxes/*
+      - package.json
+      - package-lock.json
+    
+    cmds:
+      - npm run package
+
+  build:
+    desc: Build the language server and package the VSCode extension.
+    
+    deps:
+      - package-vscode
+
+  test:
+    desc: Build the language server, package the extension, then install it.
+    
+    method: checksum
+    sources:
+      - vscode/pest.vsix
+
+    deps:
+      - build
+    cmds:
+      - code --install-extension ./vscode/pest.vsix
+  
+  rust-fmt-and-lint:
+    desc: Format and lint the `pest-language-server` crate
+    dir: language-server
+    internal: true
+    
+    method: checksum
+    sources:
+      - src/**/*.rs
+      - '*.toml'
+    
+    cmds:
+      - cargo fmt
+      - cargo clippy --allow-dirty --allow-staged --fix
+
+  vscode-fmt-and-lint:
+    desc: Format and lint the VSCode package
+    dir: vscode
+    internal: true
+
+    method: checksum
+    sources:
+      - client/**/*
+      - server/**/*
+      - build/*
+      - syntaxes/*
+      - package.json
+      - package-lock.json
+    
+    cmds:
+      - npm run fmt
+      - npm run fix
+
+  fmt-and-lint:
+    desc: Format and lint all code.
+
+    deps:
+      - rust-fmt-and-lint
+      - vscode-fmt-and-lint
+    

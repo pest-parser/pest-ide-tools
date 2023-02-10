@@ -1,0 +1,82 @@
+{
+	"name": "pest-language-support",
+	"displayName": "Pest Language Support",
+	"description": "Adds support for the Pest Rust crate",
+	"version": "0.0.1",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Jamalam360/pest-ide-support"
+	},
+	"license": "MIT",
+	"icon": "icon.png",
+	"engines": {
+		"vscode": "^1.74.0"
+	},
+	"categories": [
+		"Programming Languages"
+	],
+	"main": "./build/client.js",
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"contributes": {
+		"languages": [
+			{
+				"id": "pest",
+				"aliases": [
+					"Pest",
+					"pest"
+				],
+				"extensions": [
+					".pest"
+				],
+				"configuration": "./language-configuration.json",
+				"icon": {
+					"light": "icon.png",
+					"dark": "icon.png"
+				}
+			}
+		],
+		"grammars": [
+			{
+				"language": "pest",
+				"scopeName": "source.pest",
+				"path": "./syntaxes/pest.tmLanguage.json"
+			}
+		],
+		"commands": [
+			{
+				"command": "pest-language-support.restartServer",
+				"title": "Restart Pest Language Server",
+				"category": "Pest Language Support"
+			}
+		]
+	},
+	"scripts": {
+		"package": "vsce package --githubBranch main --out pest.vsix",
+		"publish": "vsce publish --githubBranch main --packagePath pest.vsix",
+		"fix": "gts fix",
+		"lint": "gts lint -- . --max-warnings 0",
+		"fmt": "prettier --write 'client/**/*.ts' 'server/**/*.ts' '*.js' '*.json' 'syntaxes/*.json'",
+		"esbuild-client": "esbuild client=./client/src --bundle --outdir=build --external:vscode --format=cjs --platform=node --minify",
+		"esbuild-server": "esbuild server=./server/src --bundle --outdir=build --external:vscode --format=cjs --platform=node --minify",
+		"vscode:prepublish": "npm run esbuild-server && npm run esbuild-client"
+	},
+	"dependencies": {
+		"vscode-languageclient": "^7.0.0",
+		"vscode-languageserver": "^7.0.0"
+	},
+	"devDependencies": {
+		"@types/node": "^16.10.3",
+		"@types/vscode": "^1.52.0",
+		"@typescript-eslint/eslint-plugin": "^5.49.0",
+		"@typescript-eslint/parser": "^5.49.0",
+		"esbuild": "^0.13.14",
+		"eslint-config-prettier": "^8.6.0",
+		"eslint-plugin-node": "^11.1.0",
+		"eslint-plugin-prettier": "^4.2.1",
+		"gts": "^3.1.0",
+		"typescript": "^4.4.3",
+		"vsce": "^2.6.3"
+	}
+}
