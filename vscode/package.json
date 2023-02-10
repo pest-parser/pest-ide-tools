@@ -2,7 +2,7 @@
 	"name": "pest-language-support",
 	"displayName": "Pest Language Support",
 	"description": "Adds support for the Pest Rust crate",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/Jamalam360/pest-ide-support"
