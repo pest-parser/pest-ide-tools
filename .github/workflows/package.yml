@@ -1,4 +1,4 @@
-name: Package VSCode Extension
+name: Package Extensions
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
         uses: ./.github/actions/setup
         with:
           kind: package-vscode
-          toolchain: 1.62.0
+          secret: ${{ secrets.GITHUB_TOKEN }}
       - name: Install NPM Packages
         working-directory: vscode
         run: npm install

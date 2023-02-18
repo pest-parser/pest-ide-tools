@@ -5,6 +5,9 @@ inputs:
   kind:
     description: Job kind (for cache key)
     required: false
+  secret:
+    description: GitHub Token
+    required: true
 
 outputs:
   cache-key:
@@ -25,7 +28,7 @@ runs:
     - name: Setup Task
       uses: arduino/setup-task@v1
       with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        repo-token: ${{ inputs.secret }}
     - name: Set up cache
       uses: Swatinem/rust-cache@v2
       with:
