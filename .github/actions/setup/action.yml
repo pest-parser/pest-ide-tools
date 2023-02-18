@@ -33,3 +33,4 @@ runs:
       uses: Swatinem/rust-cache@v2
       with:
         shared-key: ${{inputs.kind}}-${{runner.os}}-${{steps.toolchain.outputs.cachekey}}
+        workspaces: language-server
