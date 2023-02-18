@@ -1,7 +1,14 @@
 [package]
 name = "pest-language-server"
+description = "A language server for Pest."
+authors = ["Jamalam <james@jamalam.tech>"]
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/pest-parser/pest-ide-tools"
+license = "Apache-2.0"
+license-file = "../LICENSE"
+readme = "../README.md"
+homepage = "https://pest.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

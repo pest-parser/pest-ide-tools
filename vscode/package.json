@@ -1,13 +1,13 @@
 {
-	"name": "pest-language-support",
-	"displayName": "Pest Language Support",
-	"description": "Adds support for the Pest Rust crate",
+	"name": "pest-ide-tools",
+	"displayName": "Pest IDE Tools",
+	"description": "Tools for the Rust-based Pest parser generator",
 	"version": "0.1.0",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Jamalam360/pest-ide-support"
+		"url": "https://github.com/pest-parser/pest-ide-tools"
 	},
-	"license": "MIT",
+	"license": "Apache-2.0",
 	"icon": "icon.png",
 	"engines": {
 		"vscode": "^1.74.0"
