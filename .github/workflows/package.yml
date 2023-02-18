@@ -1,0 +1,26 @@
+name: Package Extensions
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  package-vscode:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          kind: package-vscode
+          secret: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install NPM Packages
+        working-directory: vscode
+        run: npm install
+      - name: Package Extension
+        run: task package-vscode
+      - uses: actions/upload-artifact@v3
+        with:
+          name: pest-vscode
+          path: vscode/pest.vsix

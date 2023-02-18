@@ -17,7 +17,6 @@ tasks:
   package-vscode:
     desc: Package the VSCode extension into a VSIX file.
     dir: vscode
-    internal: true
 
     deps:
       - wasm-pack
@@ -40,7 +39,7 @@ tasks:
     deps:
       - package-vscode
 
-  test:
+  install:
     desc: Build the language server, package the extension, then install it.
     
     method: checksum

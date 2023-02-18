@@ -1,0 +1,36 @@
+name: Setup
+description: Initial setup for workflows
+
+inputs:
+  kind:
+    description: Job kind (for cache key)
+    required: false
+  secret:
+    description: GitHub Token
+    required: true
+
+outputs:
+  cache-key:
+    description: Cache key
+    value: ${{inputs.kind}}-${{runner.os}}-${{steps.toolchain.outputs.cachekey}}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup wasm-pack
+      uses: jetli/wasm-pack-action@v0.4.0
+      with:
+        version: latest
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:   
+        node-version: 16
+    - name: Setup Task
+      uses: arduino/setup-task@v1
+      with:
+        repo-token: ${{ inputs.secret }}
+    - name: Set up cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        shared-key: ${{inputs.kind}}-${{runner.os}}-${{steps.toolchain.outputs.cachekey}}
+        workspaces: language-server
