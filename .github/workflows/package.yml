@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  package:
+  package-vscode:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -15,6 +15,9 @@ jobs:
         with:
           kind: package-vscode
           toolchain: 1.62.0
+      - name: Install NPM Packages
+        working-directory: vscode
+        run: npm install
       - name: Package Extension
         run: task package-vscode
       - uses: actions/upload-artifact@v3
