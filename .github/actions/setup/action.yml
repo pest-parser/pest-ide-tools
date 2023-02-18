@@ -25,6 +25,8 @@ runs:
       uses: actions/setup-node@v3
       with:   
         node-version: 16
+        cache: npm
+        cache-dependency-path: vscode/package-lock.json
     - name: Setup Task
       uses: arduino/setup-task@v1
       with:
