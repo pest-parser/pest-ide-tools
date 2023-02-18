@@ -1,0 +1,31 @@
+name: Package VSCode Extension
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Setup wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: latest
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:   
+          node-version: 16
+      - name: Setup Task
+        uses: arduino/setup-task@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Package Extension
+        run: task package-vscode
+      - uses: actions/upload-artifact@v3
+        with:
+          name: pest-vscode
+          path: vscode/pest.vsix
+          
