@@ -67,16 +67,16 @@
 		"vscode-languageserver": "^7.0.0"
 	},
 	"devDependencies": {
-		"@types/node": "^16.10.3",
-		"@types/vscode": "^1.52.0",
-		"@typescript-eslint/eslint-plugin": "^5.49.0",
-		"@typescript-eslint/parser": "^5.49.0",
-		"esbuild": "^0.13.14",
+		"@types/node": "^16.18.12",
+		"@types/vscode": "^1.75.1",
+		"@typescript-eslint/eslint-plugin": "^5.52.0",
+		"@typescript-eslint/parser": "^5.52.0",
+		"@vscode/vsce": "^2.17.0",
+		"esbuild": "^0.13.15",
 		"eslint-config-prettier": "^8.6.0",
 		"eslint-plugin-node": "^11.1.0",
 		"eslint-plugin-prettier": "^4.2.1",
-		"gts": "^3.1.0",
-		"typescript": "^4.4.3",
-		"vsce": "^2.6.3"
+		"gts": "^3.1.1",
+		"typescript": "^4.9.5"
 	}
 }
