@@ -1,4 +1,4 @@
-# Pest IDE Support
+# Pest IDE Tools
 
 _IDE support for [Pest](https://pest.rs), via the LSP._
 
