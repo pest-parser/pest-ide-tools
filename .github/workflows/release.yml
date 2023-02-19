@@ -1,0 +1,49 @@
+name: Release Extensions
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          kind: release
+          secret: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install VSCode NPM Packages
+        working-directory: vscode
+        run: npm install
+      - name: Package VSCode Extension
+        run: task package-vscode
+      # TODO(Jamalam): Release VSCode extension to marketplace here, when we have it setup
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          body: |
+            # Checklist Before Publishing
+
+            - [ ] Check VSCode extension was published correctly.
+            - [ ] Check artifacts were uploaded to this release.
+            - [ ] Update release body.
+          draft: true
+          prerelease: false
+      - uses: xresloader/upload-to-github-release@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          file: "vscode/pest.vsix"
+          release_id: ${{ steps.create_release.outputs.id }}
+          overwrite: true
