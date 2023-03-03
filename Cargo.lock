@@ -256,12 +256,14 @@ dependencies = [
 
 [[package]]
 name = "pest_fmt"
-version = "0.2.1"
-source = "git+https://github.com/huacnlee/pest-fmt.git?branch=improve-fmt#f1fbb1ef72a90e7b293dccb52149b242e4e5482e"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e92afa35ca009315bc9fac67d946b70fe52bd48b09e86cd60dddefd11be5191"
 dependencies = [
  "ignore",
  "pest",
  "pest_derive",
+ "pest_meta",
  "text-utils",
  "toml",
 ]

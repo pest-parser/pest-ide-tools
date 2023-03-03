@@ -16,6 +16,7 @@ use lsp_types::{
     ReferenceParams, RenameParams, TextDocumentEdit, TextDocumentItem, TextEdit, Url,
     VersionedTextDocumentIdentifier, WorkspaceEdit,
 };
+use lsp_types::{DocumentFormattingParams, Position};
 use pest::error::ErrorVariant;
 use pest_meta::parser::Rule;
 use serde_wasm_bindgen::{from_value, to_value};
@@ -413,6 +414,28 @@ impl PestLanguageServer {
                 .collect(),
         ))
         .unwrap()
+    }
+
+    #[allow(unused_variables)]
+    #[wasm_bindgen(js_class = PestLanguageServer, js_name = onDocumentFormatting)]
+    pub fn on_format(&mut self, params: JsValue) -> JsValue {
+        let DocumentFormattingParams { text_document, .. } = from_value(params).unwrap();
+
+        let document = self.documents.get(&text_document.uri).unwrap();
+        let input = document.text.as_str();
+
+        let fmt = pest_fmt::Formatter::new(input);
+        if let Ok(formatted) = fmt.format() {
+            let lines = document.text.lines();
+            let last_line = lines.clone().last().unwrap_or("");
+            let range = Range::new(
+                Position::new(0, 0),
+                Position::new(lines.count() as u32, last_line.len() as u32),
+            );
+            return to_value(&vec![TextEdit::new(range, formatted)]).unwrap();
+        }
+
+        JsValue::null()
     }
 
     fn reload(&mut self) -> Diagnostics {
