@@ -14,7 +14,7 @@ This repository contains an implementation of the _Language Server Protocol_ for
 - [x] Highlighting a rule highlights it's references.
 - [x] Hover information for built-in rules.
 - [x] Intellisense/completion of rule names.
-- [ ] Formatting.
+- [x] Formatting.
 - [ ] Debugging window (as on the Pest website).
 
 ## Supported IDEs
@@ -43,7 +43,7 @@ Each extension is implemented in the language that makes the most sense for its 
 
 ## Contributing
 
-We appreciate contributions! I recommend reaching out on Discord (the invite to which can be found at [pest.rs](https://pest.rs)) before contributing, to check with us. 
+We appreciate contributions! I recommend reaching out on Discord (the invite to which can be found at [pest.rs](https://pest.rs)) before contributing, to check with us.
 
 ## Credits
 

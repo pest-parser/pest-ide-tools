@@ -48,6 +48,10 @@ connection.onCompletion(params => {
 	return ls.onCompletion(params);
 });
 
+connection.onDocumentFormatting(params => {
+	return ls.onDocumentFormatting(params);
+});
+
 connection.onExecuteCommand(params => {
 	const { command } = params;
 
@@ -77,6 +81,7 @@ connection.onInitialize(() => {
 			definitionProvider: true,
 			referencesProvider: true,
 			completionProvider: {},
+			documentFormattingProvider: true,
 			workspace: {
 				workspaceFolders: { supported: false },
 				fileOperations: {
