@@ -20,14 +20,15 @@ jobs:
       - name: Install VSCode NPM Packages
         working-directory: vscode
         run: npm install
+        
+      - name: Package VSCode Extension
+        run: task package-vscode
       - name: Publish to VSCode Marketplace
         working-directory: vscode
         run: npm run publish 
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
-      - name: Package VSCode Extension
-        run: task package-vscode
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
