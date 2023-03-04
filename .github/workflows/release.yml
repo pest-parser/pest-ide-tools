@@ -20,10 +20,14 @@ jobs:
       - name: Install VSCode NPM Packages
         working-directory: vscode
         run: npm install
+      - name: Publish to VSCode Marketplace
+        working-directory: vscode
+        run: npm run deploy
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
       - name: Package VSCode Extension
         run: task package-vscode
-      # TODO(Jamalam): Release VSCode extension to marketplace here, when we have it setup
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
