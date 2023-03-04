@@ -54,7 +54,7 @@
 	},
 	"scripts": {
 		"package": "vsce package --githubBranch main --out pest.vsix",
-		"publish": "vsce publish --githubBranch main --packagePath pest.vsix",
+		"publish": "vsce publish --githubBranch main",
 		"fix": "gts fix",
 		"lint": "gts lint -- . --max-warnings 0",
 		"fmt": "prettier --write 'client/**/*.ts' 'server/**/*.ts' '*.js' '*.json' 'syntaxes/*.json'",
