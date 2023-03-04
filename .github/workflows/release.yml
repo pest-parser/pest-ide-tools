@@ -8,6 +8,8 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # Gives access to the VSCE_PAT secret
+    environment: vsce
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -20,7 +22,7 @@ jobs:
       - name: Install VSCode NPM Packages
         working-directory: vscode
         run: npm install
-        
+
       - name: Package VSCode Extension
         run: task package-vscode
       - name: Publish to VSCode Marketplace
