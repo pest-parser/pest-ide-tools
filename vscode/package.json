@@ -2,19 +2,32 @@
 	"name": "pest-ide-tools",
 	"displayName": "Pest IDE Tools",
 	"description": "Tools for the Rust-based Pest parser generator",
+	"publisher": "pest",
+	"homepage": "https://pest.rs",
+	"keywords": [
+		"pest",
+		"parser",
+		"rust",
+		"peg",
+		"grammar"
+	],
+	"categories": [
+		"Formatters",
+		"Programming Languages"
+	],
 	"version": "0.1.0",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/pest-parser/pest-ide-tools"
+	},
+	"bugs": {
+		"url": "https://github.com/pest-parser/pest-ide-tools/issues"
 	},
 	"license": "Apache-2.0",
 	"icon": "icon.png",
 	"engines": {
 		"vscode": "^1.74.0"
 	},
-	"categories": [
-		"Programming Languages"
-	],
 	"main": "./build/client.js",
 	"activationEvents": [
 		"onStartupFinished"
