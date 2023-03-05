@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     # Gives access to the VSCE_PAT secret
     environment: vsce
+    permissions:
+      # Allows creation of releases
+      contents: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
