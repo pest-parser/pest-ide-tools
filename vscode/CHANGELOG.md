@@ -6,6 +6,7 @@ All notable changes will be documented in this file.
 
 ## [0.1.1]
 
+- feat(server): add hover information for `SOI` and `EOI`
 - fix(ci): allow the release workflow to create releases.
 - fix(vscode): add a readme for the vscode extension.
 - fix(vscode): add a changelog.

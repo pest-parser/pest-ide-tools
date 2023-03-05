@@ -1,5 +1,7 @@
 pub(crate) const BUILTINS: &[&str] = &[
     "ANY",
+    "SOI",
+    "EOI",
     "ASCII_DIGIT",
     "ASCII_NONZERO_DIGIT",
     "ASCII_BIN_DIGIT",
@@ -273,6 +275,8 @@ pub(crate) const BUILTINS: &[&str] = &[
 pub(crate) fn get_builtin_description(rule: &str) -> Option<&str> {
     match rule {
         "ANY" => Some("Matches any character."),
+        "SOI" => Some("Matches the start of the input. Does not consume any characters."),
+        "EOI" => Some("Matches the end of the input. Does not consume any characters."),
 
         "ASCII_DIGIT" => Some("Matches any ASCII digit (0-9)."),
         "ASCII_NONZERO_DIGIT" => Some("Matches any non-zero ASCII digit (1-9)."),
