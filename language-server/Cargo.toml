@@ -4,11 +4,10 @@ description = "A language server for Pest."
 edition = "2021"
 homepage = "https://pest.rs"
 license = "Apache-2.0"
-license-file = "../LICENSE"
 name = "pest-language-server"
 readme = "../README.md"
 repository = "https://github.com/pest-parser/pest-ide-tools"
-version = "0.1.0"
+version = "0.1.1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -23,6 +22,6 @@ lsp-types = "0.93"
 pest = "2.5.5"
 pest_fmt = "0.2.2"
 pest_meta = "2.5.5"
-serde = {version = "1", features = ["derive"]}
+serde = { version = "1", features = ["derive"] }
 serde-wasm-bindgen = "0.4"
 wasm-bindgen = "0.2"
