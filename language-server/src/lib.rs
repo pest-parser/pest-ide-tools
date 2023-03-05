@@ -33,6 +33,7 @@ use crate::helpers::{FindWord, IntoRange};
 #[wasm_bindgen]
 pub struct PestLanguageServer {
     documents: Documents,
+    cached_rule_identifiers: Vec<String>,
     diagnostics_callback: js_sys::Function,
 }
 
@@ -41,9 +42,12 @@ impl PestLanguageServer {
     #[wasm_bindgen(constructor)]
     pub fn new(send_diagnostics_callback: &js_sys::Function) -> Self {
         console_error_panic_hook::set_once();
+        let mut cached_rule_identifiers = vec![];
+        cached_rule_identifiers.extend(BUILTINS.iter().map(|s| s.to_string()));
 
         Self {
             documents: BTreeMap::new(),
+            cached_rule_identifiers,
             diagnostics_callback: send_diagnostics_callback.clone(),
         }
     }
@@ -388,22 +392,35 @@ impl PestLanguageServer {
         let partial_identifier = &line[range];
 
         let pairs = parse_pest_grammar(&document.text);
-        let mut identifiers = Vec::new();
-
+        
         if let Ok(pairs) = pairs {
+            self.cached_rule_identifiers = Vec::new();
+            self.cached_rule_identifiers.extend(BUILTINS.iter().map(|s| s.to_string()));
+
             for pair in pairs.into_iter() {
                 if pair.as_rule() == Rule::grammar_rule {
                     let mut inner = pair.into_inner();
-                    let inner = inner.next().unwrap();
-                    identifiers.push(inner.as_str());
+                    let identifier = loop {
+                        if let Some(inner) = inner.next() {
+                            if inner.as_rule() == Rule::identifier {
+                                break Some(inner);
+                            }
+                        } else {
+                            break None;
+                        }
+                    };
+
+                    if let Some(inner) = identifier {
+                        self.cached_rule_identifiers.push(inner.as_str().to_owned());
+                    }
                 }
             }
         }
 
-        identifiers.extend(BUILTINS);
-
         to_value(&CompletionResponse::Array(
-            identifiers
+            //TODO(Jamalam360): It would be nice to do this without cloning - no time right now.
+            self.cached_rule_identifiers
+                .clone()
                 .into_iter()
                 .filter(|i| partial_identifier.is_empty() || i.starts_with(partial_identifier))
                 .map(|i| CompletionItem {

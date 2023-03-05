@@ -4,6 +4,11 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 
+## [0.1.2]
+
+- fix(server): solve issue relating to 0 vs 1 indexing.
+- feat(server): suggest user-defined rule names in intellisense.
+
 ## [0.1.1]
 
 - feat(server): add hover information for `SOI` and `EOI`
