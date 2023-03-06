@@ -18,10 +18,10 @@ crate-type = ["cdylib"]
 [dependencies]
 console_error_panic_hook = "0.1"
 js-sys = "0.3"
-lsp-types = "0.93"
+lsp-types = "0.94"
 pest = "2.5"
 pest_fmt = "0"
 pest_meta = "2.5"
-serde = {version = "1", features = ["derive"]}
+serde = { version = "1", features = ["derive"] }
 serde-wasm-bindgen = "0.4"
 wasm-bindgen = "0.2"

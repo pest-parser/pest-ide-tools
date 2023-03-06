@@ -6,7 +6,7 @@ All notable changes will be documented in this file.
 
 ## [0.1.2]
 
-- Upgrade pest v2.5.6, pest-fmt v0.2.3. See [Release Notes](https://github.com/pest-parser/pest/releases/tag/v2.5.6).
+- feat: upgrade pest v2.5.6, pest-fmt v0.2.3. See [Release Notes](https://github.com/pest-parser/pest/releases/tag/v2.5.6).
 - fix(server): solve issue relating to 0 vs 1 indexing.
 - feat(server): suggest user-defined rule names in intellisense.
 
