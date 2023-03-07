@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 
-import { join } from "path";
-
 import {
 	ExtensionContext,
 	RelativePattern,
@@ -12,11 +10,7 @@ import {
 	WorkspaceFolder,
 	WorkspaceFoldersChangeEvent,
 } from "vscode";
-import {
-	LanguageClient,
-	LanguageClientOptions,
-	TransportKind,
-} from "vscode-languageclient/node";
+import { LanguageClient } from "vscode-languageclient/node";
 
 const extensionName = "Pest Language Server";
 const outputChannel = window.createOutputChannel(extensionName);
@@ -41,7 +35,6 @@ async function openDocument(uri: Uri) {
 }
 
 async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
-	const server = ctx.asAbsolutePath(join("build", "server.js"));
 	const root = folder.uri;
 
 	const pestFilesIncluded: Set<string> = new Set();
@@ -63,17 +56,22 @@ async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
 	ctx.subscriptions.push(deleteWatcher);
 	ctx.subscriptions.push(createChangeWatcher);
 
-	const serverOpts = { module: server, transport: TransportKind.ipc };
-	const clientOpts: LanguageClientOptions = {
-		documentSelector: [
-			{ language: "pest", pattern: `${root.fsPath}/**/*.pest` },
-		],
-		synchronize: { fileEvents: deleteWatcher },
-		diagnosticCollectionName: extensionName,
-		workspaceFolder: folder,
-		outputChannel,
-	};
-	const client = new LanguageClient(extensionName, serverOpts, clientOpts);
+	const client = new LanguageClient(
+		extensionName,
+		{
+			command:
+				"/home/james/Development/pest-ide-support/target/debug/pest-language-server",
+		},
+		{
+			documentSelector: [
+				{ language: "pest", pattern: `${root.fsPath}/**/*.pest` },
+			],
+			synchronize: { fileEvents: deleteWatcher },
+			diagnosticCollectionName: extensionName,
+			workspaceFolder: folder,
+			outputChannel,
+		}
+	);
 
 	ctx.subscriptions.push(client.start());
 

@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "esbuild-with-rust",
+			"path": "vscode",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: esbuild-with-rust - vscode",
+			"detail": "task rust-build -d .. && npm run esbuild-client"
+		}
+	]
+}

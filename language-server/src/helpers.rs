@@ -1,23 +1,11 @@
 use std::collections::BTreeMap;
 
-use lsp_types::{Location, Position, PublishDiagnosticsParams, Range, TextDocumentItem, Url};
 use pest::{error::LineColLocation, iterators::Pairs, Span};
+use tower_lsp::lsp_types::{
+    Location, Position, PublishDiagnosticsParams, Range, TextDocumentItem, Url,
+};
 
 use pest_meta::{parser, validator};
-use wasm_bindgen::prelude::*;
-
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = console, js_name = log)]
-    fn console_log(s: &str);
-}
-
-pub(crate) fn log(s: &str) {
-    #[allow(unused_unsafe)]
-    unsafe {
-        console_log(&("[Pest LS (WASM)] ".to_owned() + s))
-    }
-}
 
 pub(crate) type Documents = BTreeMap<Url, TextDocumentItem>;
 pub(crate) type Diagnostics = BTreeMap<Url, PublishDiagnosticsParams>;
@@ -37,7 +25,7 @@ impl IntoRange for LineColLocation {
     fn into_lsp_range(self) -> Range {
         match self {
             LineColLocation::Pos((line, col)) => {
-                let pos = Position::new(line as u32 - 1, col as u32 - 1);
+                let pos = Position::new(line as u32, col as u32);
                 Range::new(pos, pos)
             }
             LineColLocation::Span((start_line, start_col), (end_line, end_col)) => Range::new(
@@ -52,7 +40,7 @@ impl IntoRange for Span<'_> {
     fn into_lsp_range(self) -> Range {
         let start = self.start_pos().line_col();
         let end = self.end_pos().line_col();
-        LineColLocation::Span((start.0 - 1, start.1 - 1), (end.0 - 1, end.1 - 1)).into_lsp_range()
+        LineColLocation::Span((start.0, start.1), (end.0, end.1)).into_lsp_range()
     }
 }
 
@@ -78,7 +66,6 @@ impl<'a> FindAllOccurrences<'a> for Pairs<'a, parser::Rule> {
             if pair.as_rule() == parser::Rule::identifier && pair.as_str() == identifier {
                 spans.push(pair.as_span());
             }
-
             let inner = pair.into_inner();
             spans.extend(inner.find_all_occurrences(identifier));
         }

@@ -19,13 +19,14 @@ This repository contains an implementation of the _Language Server Protocol_ for
 
 ## Supported IDEs
 
-- Visual Studio Code
+- [Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=pest.pest-ide-tools)
 
 Due to the usage of the LSP by this project, adding support for new IDEs should
 be far more achievable than a custom implementation for each editor.
 
 ### Planned Support
 
+- Sublime.
 - Neovim.
 - Fleet, once it releases.
 
@@ -37,9 +38,7 @@ The task `fmt-and-lint` can be used to format and lint your code to ensure it fi
 
 ### Architecture
 
-The server itself is implemented in Rust. It contains several methods which are called by each editor extension upon important events. The server is packaged into a WASM module.
-
-Each extension is implemented in the language that makes the most sense for its respective editor.
+The server itself is implemented in Rust using `tower-lsp`. It communicates with editors via JSON-RPC through standard input/output, according to the language server protocol.
 
 ## Contributing
 

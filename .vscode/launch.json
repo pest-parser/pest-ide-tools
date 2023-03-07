@@ -14,8 +14,10 @@
         "${workspaceFolder}/vscode/tests",
         "--extensionDevelopmentPath=${workspaceFolder}/vscode"
       ],
-      "outFiles": ["${workspaceFolder}/vscode/build/**/*"],
-      "preLaunchTask": "npm: esbuild - vscode"
+      "outFiles": [
+        "${workspaceFolder}/vscode/build/**/*"
+      ],
+      "preLaunchTask": "npm: esbuild-with-rust - vscode"
     }
   ]
 }

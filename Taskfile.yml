@@ -1,10 +1,9 @@
 version: 3
 
 tasks:
-  wasm-pack:
-    desc: Run WASM-pack to compile a web assembly binary of the language server.
+  rust-build:
+    desc: Compile the language server binary.
     dir: language-server
-    internal: true
     
     method: checksum
     sources:
@@ -12,14 +11,14 @@ tasks:
       - '*.toml'
     
     cmds:
-      - wasm-pack build --target nodejs --out-dir ../vscode/build
+      - cargo build
 
   package-vscode:
     desc: Package the VSCode extension into a VSIX file.
     dir: vscode
 
     deps:
-      - wasm-pack
+      - rust-build
 
     method: checksum
     sources:
