@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 
 import {
+	commands,
 	ExtensionContext,
 	RelativePattern,
 	TextDocument,
@@ -11,9 +12,10 @@ import {
 	WorkspaceFoldersChangeEvent,
 } from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
+import { findServer } from "./server";
 
 const extensionName = "Pest Language Server";
-const outputChannel = window.createOutputChannel(extensionName);
+export const outputChannel = window.createOutputChannel(extensionName);
 
 const clients: Map<string, LanguageClient> = new Map();
 
@@ -35,6 +37,16 @@ async function openDocument(uri: Uri) {
 }
 
 async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
+	const command = await findServer();
+
+	if (!command) {
+		outputChannel.appendLine("[TS] Aborting server start.");
+		await window.showErrorMessage(
+			"Not starting Pest Language Server as a suitable binary was not found."
+		);
+		return;
+	}
+
 	const root = folder.uri;
 
 	const pestFilesIncluded: Set<string> = new Set();
@@ -59,8 +71,7 @@ async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
 	const client = new LanguageClient(
 		extensionName,
 		{
-			command:
-				"/home/james/Development/pest-ide-support/target/debug/pest-language-server",
+			command,
 		},
 		{
 			documentSelector: [
@@ -109,7 +120,44 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
 	for (const folder of folders) await startClients(folder, context);
 
-	workspace.onDidChangeWorkspaceFolders(updateClients(context));
+	context.subscriptions.push(
+		workspace.onDidChangeWorkspaceFolders(updateClients(context))
+	);
+
+	context.subscriptions.push(
+		workspace.onDidChangeConfiguration(async e => {
+			if (e.affectsConfiguration("pestIdeTools.serverPath")) {
+				for (const client of clients.values()) {
+					const folder = client.clientOptions.workspaceFolder;
+					await stopClient(client);
+
+					if (folder) {
+						await startClients(folder, context);
+					}
+				}
+			}
+		})
+	);
+
+	commands.registerCommand("pestIdeTools.restartServer", async () => {
+		const currentFolder = workspace.workspaceFolders?.[0].uri.toString();
+
+		if (!currentFolder) {
+			await window.showInformationMessage("No Pest workspace is open.");
+			return;
+		}
+
+		const client = clients.get(currentFolder);
+
+		if (client) {
+			const folder = client.clientOptions.workspaceFolder;
+			await stopClient(client);
+
+			if (folder) {
+				await startClients(folder, context);
+			}
+		}
+	});
 }
 
 export async function deactivate(): Promise<void> {

@@ -13,6 +13,7 @@ pub(crate) type Diagnostics = BTreeMap<Url, PublishDiagnosticsParams>;
 pub(crate) fn get_empty_diagnostics(
     (uri, doc): (&Url, &TextDocumentItem),
 ) -> (Url, PublishDiagnosticsParams) {
+    "test";
     let params = PublishDiagnosticsParams::new(uri.clone(), vec![], Some(doc.version));
     (uri.clone(), params)
 }

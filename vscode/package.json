@@ -56,6 +56,36 @@
 				"scopeName": "source.pest",
 				"path": "./syntaxes/pest.tmLanguage.json"
 			}
+		],
+		"configuration": [
+			{
+				"id": "pestIdeTools",
+				"title": "Pest IDE Tools",
+				"properties": {
+					"pestIdeTools.serverPath": {
+						"type": [
+							"string"
+						],
+						"description": "Set a custom path to a Pest LS binary.",
+						"scope": "window"
+					},
+					"pestIdeTools.checkForUpdates": {
+						"type": [
+							"boolean"
+						],
+						"description": "Check for updates to the Pest LS binary.",
+						"default": true,
+						"scope": "window"
+					}
+				}
+			}
+		],
+		"commands": [
+			{
+				"category": "Pest",
+				"command": "pestIdeTools.restartServer",
+				"title": "Restart Server"
+			}
 		]
 	},
 	"scripts": {
@@ -64,15 +94,17 @@
 		"fix": "gts fix",
 		"lint": "gts lint -- . --max-warnings 0",
 		"fmt": "prettier --write 'client/**/*.ts' '*.js' '*.json' 'syntaxes/*.json'",
+		"fmt-check": "prettier 'client/**/*.ts' '*.js' '*.json' 'syntaxes/*.json'",
 		"esbuild-with-rust": "task rust-build -d .. && npm run esbuild-client",
-		"esbuild": "npm run esbuild-client",
 		"esbuild-client": "esbuild client=./client/src --bundle --outdir=build --external:vscode --format=cjs --platform=node --minify",
 		"vscode:prepublish": "npm run esbuild-client"
 	},
 	"dependencies": {
+		"node-fetch": "^3.3.1",
 		"vscode-languageclient": "^7.0.0"
 	},
 	"devDependencies": {
+		"@types/node": "^18.15.0",
 		"@types/vscode": "^1.74.0",
 		"@typescript-eslint/eslint-plugin": "^5.52.0",
 		"@typescript-eslint/parser": "^5.52.0",

@@ -61,8 +61,8 @@ tasks:
       - '*.toml'
     
     cmds:
-      - cargo fmt
-      - cargo clippy --allow-dirty --allow-staged --fix
+      - cargo fmt --check
+      - cargo clippy
 
   vscode-fmt-and-lint:
     desc: Format and lint the VSCode package
@@ -79,8 +79,8 @@ tasks:
       - package-lock.json
     
     cmds:
-      - npm run fmt
-      - npm run fix
+      - npm run fmt-check
+      - npm run lint
 
   fmt-and-lint:
     desc: Format and lint all code.

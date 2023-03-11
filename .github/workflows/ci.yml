@@ -5,8 +5,27 @@ on:
   pull_request:
 
 jobs:
-  package-vscode:
+  check:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          kind: check
+          secret: ${{ secrets.GITHUB_TOKEN }}
+      - name: Format and Lint
+        run: task fmt-and-lint
+      - name: Cargo Check
+        run: cargo check
+
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3

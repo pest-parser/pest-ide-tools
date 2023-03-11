@@ -4,7 +4,7 @@ module.exports = {
 	ignorePatterns: ["node_modules", "build"],
 	rules: {
 		quotes: ["error", "double"],
-		indent: ["error", "tab"],
+		indent: ["off"],
 		"no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
 	},
 	overrides: [

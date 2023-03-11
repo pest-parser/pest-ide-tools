@@ -12,6 +12,7 @@
       "debugWebWorkerHost": true,
       "args": [
         "${workspaceFolder}/vscode/tests",
+        "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}/vscode"
       ],
       "outFiles": [
