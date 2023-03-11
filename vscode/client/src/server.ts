@@ -21,34 +21,40 @@ export async function findServer(): Promise<string | undefined> {
 	const updateCheckerEnabled = config.get("checkForUpdates") as boolean;
 
 	if (updateCheckerEnabled) {
-		const { stdout: currentVersion } = await promisify(exec)(
-			`${path} --version`
-		);
-		outputChannel.appendLine(`[TS] Server version: ${currentVersion}`);
+		try {
+			const { stdout: currentVersion } = await promisify(exec)(
+				`${path} --version`
+			);
+			outputChannel.appendLine(`[TS] Server version: ${currentVersion}`);
 
-		const res = await fetch(
-			"https://crates.io/api/v1/crates/pest_language_server"
-		);
-
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-ignore
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-		const latestVersion = (await res.json())["crate"]["max_version"] as string;
-
-		if (currentVersion !== latestVersion) {
-			const choice = await window.showInformationMessage(
-				`A new version of the Pest Language Server is available (${currentVersion} -> ${latestVersion}). Would you like to update automatically?`,
-				{},
-				"Yes"
+			const res = await fetch(
+				"https://crates.io/api/v1/crates/pest_language_server"
 			);
 
-			if (choice) {
-				if (!(await installBinaryViaCargoInstall())) {
-					await window.showErrorMessage(
-						"Failed to update Pest Language Server."
-					);
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// @ts-ignore
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			const latestVersion = (await res.json())["crate"][
+				"max_version"
+			] as string;
+
+			if (currentVersion !== latestVersion) {
+				const choice = await window.showInformationMessage(
+					`A new version of the Pest Language Server is available (${currentVersion} -> ${latestVersion}). Would you like to update automatically?`,
+					{},
+					"Yes"
+				);
+
+				if (choice) {
+					if (!(await installBinaryViaCargoInstall())) {
+						await window.showErrorMessage(
+							"Failed to update Pest Language Server."
+						);
+					}
 				}
 			}
+		} catch (_) {
+			outputChannel.appendLine("[TS] Failed to run update check.");
 		}
 	}
 

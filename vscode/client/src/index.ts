@@ -72,6 +72,7 @@ async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
 		extensionName,
 		{
 			command,
+			args: ["--no-update-check"],
 		},
 		{
 			documentSelector: [

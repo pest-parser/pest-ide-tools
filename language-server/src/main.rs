@@ -1,8 +1,12 @@
 use std::collections::BTreeMap;
+use std::env::args;
+use std::process::exit;
 use std::sync::Arc;
+use std::time::Duration;
 
 use capabilities::capabilities;
 use lsp::PestLanguageServerImpl;
+use reqwest::ClientBuilder;
 use tokio::sync::RwLock;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::{
@@ -110,9 +114,75 @@ impl LanguageServer for PestLanguageServer {
 
 #[tokio::main]
 async fn main() {
+    let args = args();
+    let mut iter = args.skip(1);
+
+    let mut check_updates = true;
+
+    while let Some(arg) = iter.next() {
+        match arg.as_str() {
+            "--version" => {
+                println!("{}", env!("CARGO_PKG_VERSION"));
+                exit(0);
+            }
+            "--no-update-check" => {
+                check_updates = false;
+            }
+            _ => eprintln!("Unexpected argument {}", arg)
+        }
+    }
+
+    if check_updates {
+        if let Some(new_version) = check_for_updates().await {
+            println!(
+                "A new version of pest_language_server is available: v{}",
+                new_version
+            );
+        } else {
+            println!("pest_language_server is up to date.");
+        }
+    }
+
     let stdin = tokio::io::stdin();
     let stdout = tokio::io::stdout();
 
     let (service, socket) = LspService::new(PestLanguageServer::new);
     Server::new(stdin, stdout, socket).serve(service).await;
+}
+
+async fn check_for_updates() -> Option<String> {
+    let client = ClientBuilder::new()
+        .user_agent(concat!(
+            env!("CARGO_PKG_NAME"),
+            "/",
+            env!("CARGO_PKG_VERSION")
+        ))
+        .timeout(Duration::from_secs(5))
+        .build()
+        .ok();
+
+    if let Some(client) = client {
+        let response = client
+            .get("https://crates.io/api/v1/crates/pest_language_server")
+            .send()
+            .await;
+
+        if let Ok(response) = response {
+            return response
+                .json::<serde_json::Value>()
+                .await
+                .ok()
+                .and_then(|json| {
+                    let version = json["crate"]["max_version"].as_str()?;
+
+                    if version != env!("CARGO_PKG_VERSION") {
+                        Some(version.to_string())
+                    } else {
+                        None
+                    }
+                });
+        }
+    }
+
+    None
 }
