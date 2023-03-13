@@ -20,7 +20,7 @@ jobs:
           kind: check
           secret: ${{ secrets.GITHUB_TOKEN }}
       - name: Format and Lint
-        if: ${{ matrix.os }} == 'ubuntu-latest'
+        if: contains(matrix.os, 'ubuntu')
         run: task fmt-and-lint
       - name: Cargo Check
         run: cargo check
