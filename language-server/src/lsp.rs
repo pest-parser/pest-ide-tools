@@ -314,7 +314,7 @@ impl PestLanguageServerImpl {
                     uri: text_document_position.text_document.uri,
                     version: Some(document.version),
                 },
-                edits: edits.into_iter().map(|edit| OneOf::Left(edit)).collect(),
+                edits: edits.into_iter().map(OneOf::Left).collect(),
             }])),
         }))
     }

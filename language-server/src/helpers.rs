@@ -18,7 +18,6 @@ pub type Diagnostics = BTreeMap<Url, PublishDiagnosticsParams>;
 pub fn create_empty_diagnostics(
     (uri, doc): (&Url, &TextDocumentItem),
 ) -> (Url, PublishDiagnosticsParams) {
-    "test";
     let params = PublishDiagnosticsParams::new(uri.clone(), vec![], Some(doc.version));
     (uri.clone(), params)
 }
@@ -137,11 +136,11 @@ impl FindWordRange for &str {
 }
 
 pub trait IntoDiagnostics {
-    fn into_diagnostics(&self) -> Vec<Diagnostic>;
+    fn into_diagnostics(self) -> Vec<Diagnostic>;
 }
 
 impl IntoDiagnostics for Vec<pest::error::Error<Rule>> {
-    fn into_diagnostics(&self) -> Vec<Diagnostic> {
+    fn into_diagnostics(self) -> Vec<Diagnostic> {
         self.iter()
             .map(|e| {
                 Diagnostic::new(

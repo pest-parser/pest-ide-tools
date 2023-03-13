@@ -25,7 +25,7 @@ pub struct Analysis {
 
 impl Analysis {
     /// Updates this analysis from the given pairs.
-    pub fn update_from<'a>(&mut self, pairs: Pairs<'a, Rule>) {
+    pub fn update_from(&mut self, pairs: Pairs<Rule>) {
         self.rule_names = BTreeMap::new();
         self.rule_docs = BTreeMap::new();
         self.rule_occurrences = BTreeMap::new();
@@ -53,11 +53,11 @@ impl Analysis {
                             pairs.find_occurrences(&self.doc_url, inner.as_str()),
                         );
 
-                        if preceding_docs.len() > 0 {
+                        if !preceding_docs.is_empty() {
                             let mut buf = String::new();
 
                             if preceding_docs.len() == 1 {
-                                buf.push_str(preceding_docs.first().unwrap().clone());
+                                buf.push_str(preceding_docs.first().unwrap());
                             } else {
                                 buf.push_str("- ");
                                 buf.push_str(preceding_docs.join("\n- ").as_str());
