@@ -12,7 +12,7 @@ use tower_lsp::{
         HoverParams, InitializedParams, Location, MarkedString, MessageType, OneOf,
         OptionalVersionedTextDocumentIdentifier, Position, PublishDiagnosticsParams, Range,
         ReferenceParams, RenameParams, TextDocumentEdit, TextDocumentItem, TextEdit, Url,
-        VersionedTextDocumentIdentifier, WorkspaceEdit,
+        VersionedTextDocumentIdentifier, WorkspaceEdit, DiagnosticSeverity, Diagnostic,
     },
     Client,
 };
@@ -479,20 +479,14 @@ impl PestLanguageServerImpl {
                     diagnostics.insert(url.clone(), empty_diagnostics);
                 }
 
-                if let Some(analysis) = self.analyses.get_mut(url) {
-                    analysis.update_from(pairs);
-                } else {
-                    let mut analysis = Analysis {
+                self.analyses.entry(url.clone()).or_insert_with(|| {
+                    Analysis {
                         doc_url: url.clone(),
                         rule_names: BTreeMap::new(),
                         rule_occurrences: BTreeMap::new(),
                         rule_docs: BTreeMap::new(),
-                    };
-
-                    analysis.update_from(pairs);
-
-                    self.analyses.insert(url.clone(), analysis);
-                }
+                    }
+                }).update_from(pairs);
             } else if let Err(errors) = pairs {
                 diagnostics.insert(
                     url.clone(),
@@ -503,6 +497,26 @@ impl PestLanguageServerImpl {
                     ),
                 );
             }
+
+            // if let Some(analysis) = self.analyses.get(url) {
+            //     for (rule_name, rule_location) in analysis.get_unused_rules() {
+            //         diagnostics
+            //             .entry(url.clone())
+            //             .or_insert_with(|| create_empty_diagnostics((url, document)).1)
+            //             .diagnostics
+            //             .push(
+            //                 Diagnostic::new(
+            //                     rule_location.range,
+            //                     Some(DiagnosticSeverity::WARNING),
+            //                     None,
+            //                     Some("Pest Language Server".to_owned()),
+            //                     format!("Rule {} is unused", rule_name),
+            //                     None,
+            //                     None,
+            //                 )
+            //             );
+            //     }
+            // }
         }
 
         diagnostics

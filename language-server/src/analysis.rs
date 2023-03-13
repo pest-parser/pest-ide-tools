@@ -72,4 +72,21 @@ impl Analysis {
             }
         }
     }
+
+    pub fn get_unused_rules(&self) -> Vec<(&String, &Location)> {
+        self
+            .rule_occurrences
+            .iter()
+            .filter(|(_, occurrences)| occurrences.len() == 1)
+            .filter(|(name, _)| !BUILTINS.iter().filter(|n| n == name).any(|_| true))
+            .map(|(name, occurrences)| {
+                (
+                    name,
+                    occurrences.first().unwrap_or_else(|| {
+                        panic!("Expected at least one occurrence for rule {}", name)
+                    }),
+                )
+            })    
+            .collect()
+    }
 }
