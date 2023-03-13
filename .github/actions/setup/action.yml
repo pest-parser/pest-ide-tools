@@ -27,6 +27,10 @@ runs:
         node-version: 16
         cache: npm
         cache-dependency-path: vscode/package-lock.json
+    - name: NPM Install
+      shell: bash
+      working-directory: vscode
+      run: npm install
     - name: Setup Task
       uses: arduino/setup-task@v1
       with:

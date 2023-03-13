@@ -34,9 +34,6 @@ jobs:
         with:
           kind: package-vscode
           secret: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install NPM Packages
-        working-directory: vscode
-        run: npm install
       - name: Package Extension
         run: task package-vscode
       - name: Upload Extension
