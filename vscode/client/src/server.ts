@@ -4,7 +4,7 @@ import { stat } from "fs/promises";
 import fetch, { Response } from "node-fetch";
 import { join } from "path";
 import { promisify } from "util";
-import { window, workspace } from "vscode";
+import { ProgressLocation, window, workspace } from "vscode";
 
 export async function findServer(): Promise<string | undefined> {
 	const path = await findServerPath();
@@ -70,7 +70,7 @@ async function findServerPath(): Promise<string | undefined> {
 	const config = workspace.getConfiguration("pestIdeTools");
 
 	// Check for custom server path
-	if (config.has("serverPath")) {
+	if (config.get("serverPath")) {
 		return config.get("serverPath") as string;
 	}
 
@@ -149,11 +149,26 @@ async function checkValidity(path: string): Promise<boolean> {
 }
 
 async function installBinaryViaCargoInstall(): Promise<boolean> {
-	try {
-		await promisify(exec)("cargo install pest-language-server");
-		return true;
-	} catch (e) {
-		outputChannel.appendLine(`[TS] ${(e as ExecException).message}`);
-		return false;
-	}
+	return await window.withProgress(
+		{
+			location: ProgressLocation.Notification,
+			cancellable: false,
+			title: "Installing Pest Language Server",
+		},
+		async (progress, _) => {
+			try {
+				// await promisify(exec)("cargo install pest-language-server");
+				progress.report({ message: "Installing..." });
+				await promisify(exec)(
+					"cargo install --git https://github.com/pest-parser/pest-ide-tools --branch feat/tower-lsp --bin pest-language-server"
+				);
+				progress.report({ message: "Installed." });
+				return true;
+			} catch (e) {
+				outputChannel.appendLine(`[TS] ${(e as ExecException).message}`);
+				progress.report({ message: "An error occurred." });
+				return false;
+			}
+		}
+	);
 }
