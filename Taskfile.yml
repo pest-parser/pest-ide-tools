@@ -51,14 +51,12 @@ tasks:
       - code --install-extension ./vscode/pest.vsix
   
   rust-fmt-and-lint:
-    desc: Format and lint the `pest-language-server` crate
-    dir: language-server
+    desc: Format and lint the Rust code
     internal: true
     
     method: checksum
     sources:
-      - src/**/*.rs
-      - '*.toml'
+      - language-server/src/**/*.rs
     
     cmds:
       - cargo fmt --check
@@ -73,10 +71,8 @@ tasks:
     sources:
       - client/**/*
       - server/**/*
-      - build/*
       - syntaxes/*
       - package.json
-      - package-lock.json
     
     cmds:
       - npm run fmt-check
