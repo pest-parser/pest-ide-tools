@@ -7,7 +7,6 @@ on:
 
 jobs:
   release:
-    # TODO: This needs to compile for multiple targets
     runs-on: ubuntu-latest
     # Gives access to the VSCE_PAT secret
     environment: vsce
