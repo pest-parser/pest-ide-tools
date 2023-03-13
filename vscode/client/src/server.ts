@@ -1,12 +1,10 @@
-// This file is responsible for finding, downloading and updating the server
-
+import { outputChannel } from ".";
 import { exec, ExecException } from "child_process";
 import { stat } from "fs/promises";
-import fetch from "node-fetch";
+import fetch, { Response } from "node-fetch";
 import { join } from "path";
 import { promisify } from "util";
 import { window, workspace } from "vscode";
-import { outputChannel } from ".";
 
 export async function findServer(): Promise<string | undefined> {
 	const path = await findServerPath();
@@ -15,7 +13,7 @@ export async function findServer(): Promise<string | undefined> {
 		return undefined;
 	}
 
-	outputChannel.appendLine(`[TS] Found server at ${path}.`);
+	outputChannel.appendLine(`[TS] Using server path ${path}.`);
 
 	const config = workspace.getConfiguration("pestIdeTools");
 	const updateCheckerEnabled = config.get("checkForUpdates") as boolean;
@@ -25,11 +23,18 @@ export async function findServer(): Promise<string | undefined> {
 			const { stdout: currentVersion } = await promisify(exec)(
 				`${path} --version`
 			);
-			outputChannel.appendLine(`[TS] Server version: ${currentVersion}`);
-
-			const res = await fetch(
-				"https://crates.io/api/v1/crates/pest_language_server"
+			outputChannel.appendLine(
+				`[TS] Server version: v${currentVersion.trimEnd()}`
 			);
+
+			const res = (await Promise.race([
+				fetch("https://crates.io/api/v1/crates/pest_language_server"),
+				new Promise(() => {
+					setTimeout(() => {
+						throw new Error("Timed out.");
+					}, 2000);
+				}),
+			])) as Response;
 
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
@@ -40,7 +45,7 @@ export async function findServer(): Promise<string | undefined> {
 
 			if (currentVersion !== latestVersion) {
 				const choice = await window.showInformationMessage(
-					`A new version of the Pest Language Server is available (${currentVersion} -> ${latestVersion}). Would you like to update automatically?`,
+					`A new version of the Pest Language Server is available (v${currentVersion} -> v${latestVersion}). Would you like to update automatically?`,
 					{},
 					"Yes"
 				);
@@ -103,29 +108,26 @@ async function findServerPath(): Promise<string | undefined> {
 	return undefined;
 }
 
-function getCargoInstallRoot(): string {
-	// Check for CARGO_INSTALL_ROOT
+function getCargoInstallRoot(): string | undefined {
 	const cargoInstallRoot = process.env["CARGO_INSTALL_ROOT"];
 
 	if (cargoInstallRoot) {
 		return cargoInstallRoot;
 	}
 
-	// Check for CARGO_HOME
 	const cargoHome = process.env["CARGO_HOME"];
 
 	if (cargoHome) {
 		return join(cargoHome, "bin");
 	}
 
-	// $HOME/.cargo/bin
 	const home = process.env["HOME"];
 
 	if (home) {
 		return join(home, ".cargo", "bin");
 	}
 
-	return "";
+	return undefined;
 }
 
 function getExpectedBinaryName(): string {

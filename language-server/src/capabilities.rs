@@ -5,7 +5,8 @@ use tower_lsp::lsp_types::{
     WorkspaceFileOperationsServerCapabilities, WorkspaceServerCapabilities,
 };
 
-pub(crate) fn capabilities() -> InitializeResult {
+/// Returns the capabilities of the language server.
+pub fn capabilities() -> InitializeResult {
     InitializeResult {
         capabilities: ServerCapabilities {
             text_document_sync: Some(TextDocumentSyncCapability::Options(

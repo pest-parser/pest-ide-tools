@@ -1,16 +1,21 @@
 use std::collections::BTreeMap;
 
-use pest::{error::LineColLocation, iterators::Pairs, Span};
+use pest::{
+    error::{ErrorVariant, LineColLocation},
+    iterators::Pairs,
+    Span,
+};
 use tower_lsp::lsp_types::{
-    Location, Position, PublishDiagnosticsParams, Range, TextDocumentItem, Url,
+    Diagnostic, DiagnosticSeverity, Location, Position, PublishDiagnosticsParams, Range,
+    TextDocumentItem, Url,
 };
 
-use pest_meta::{parser, validator};
+use pest_meta::parser::{self, Rule};
 
-pub(crate) type Documents = BTreeMap<Url, TextDocumentItem>;
-pub(crate) type Diagnostics = BTreeMap<Url, PublishDiagnosticsParams>;
+pub type Documents = BTreeMap<Url, TextDocumentItem>;
+pub type Diagnostics = BTreeMap<Url, PublishDiagnosticsParams>;
 
-pub(crate) fn get_empty_diagnostics(
+pub fn create_empty_diagnostics(
     (uri, doc): (&Url, &TextDocumentItem),
 ) -> (Url, PublishDiagnosticsParams) {
     "test";
@@ -18,12 +23,12 @@ pub(crate) fn get_empty_diagnostics(
     (uri.clone(), params)
 }
 
-pub(crate) trait IntoRange {
-    fn into_lsp_range(self) -> Range;
+pub trait IntoRange {
+    fn into_range(self) -> Range;
 }
 
 impl IntoRange for LineColLocation {
-    fn into_lsp_range(self) -> Range {
+    fn into_range(self) -> Range {
         match self {
             LineColLocation::Pos((line, col)) => {
                 let pos = Position::new(line as u32, col as u32);
@@ -38,60 +43,61 @@ impl IntoRange for LineColLocation {
 }
 
 impl IntoRange for Span<'_> {
-    fn into_lsp_range(self) -> Range {
+    fn into_range(self) -> Range {
         let start = self.start_pos().line_col();
         let end = self.end_pos().line_col();
-        LineColLocation::Span((start.0, start.1), (end.0, end.1)).into_lsp_range()
+        LineColLocation::Span((start.0, start.1), (end.0, end.1)).into_range()
     }
 }
 
-pub(crate) trait IntoLocation {
-    fn into_lsp_location(self, uri: &Url) -> Location;
+pub trait IntoLocation {
+    fn into_location(self, uri: &Url) -> Location;
 }
 
 impl IntoLocation for Span<'_> {
-    fn into_lsp_location(self, uri: &Url) -> Location {
-        Location::new(uri.clone(), self.into_lsp_range())
+    fn into_location(self, uri: &Url) -> Location {
+        Location::new(uri.clone(), self.into_range())
     }
 }
 
-pub(crate) trait FindAllOccurrences<'a> {
-    fn find_all_occurrences(self, identifier: &'a str) -> Vec<Span<'a>>;
+pub trait FindOccurrences<'a> {
+    fn find_occurrences(&self, doc_uri: &Url, identifier: &'a str) -> Vec<Location>;
 }
 
-impl<'a> FindAllOccurrences<'a> for Pairs<'a, parser::Rule> {
-    fn find_all_occurrences(self, identifier: &'a str) -> Vec<Span<'a>> {
-        let mut spans = vec![];
+impl<'a> FindOccurrences<'a> for Pairs<'a, parser::Rule> {
+    fn find_occurrences(&self, doc_uri: &Url, identifier: &'a str) -> Vec<Location> {
+        let mut locs = vec![];
 
         for pair in self.clone() {
             if pair.as_rule() == parser::Rule::identifier && pair.as_str() == identifier {
-                spans.push(pair.as_span());
+                locs.push(pair.as_span().into_location(doc_uri));
             }
+
             let inner = pair.into_inner();
-            spans.extend(inner.find_all_occurrences(identifier));
+            locs.extend(inner.find_occurrences(doc_uri, identifier));
         }
 
-        spans
+        locs
     }
 }
 
-pub(crate) trait IntoRangeWithLine {
-    fn into_lsp_range(self, line: u32) -> Range;
+pub trait IntoRangeWithLine {
+    fn into_range(self, line: u32) -> Range;
 }
 
 impl IntoRangeWithLine for std::ops::Range<usize> {
-    fn into_lsp_range(self, line: u32) -> Range {
+    fn into_range(self, line: u32) -> Range {
         let start = Position::new(line, self.start as u32);
         let end = Position::new(line, self.end as u32);
         Range::new(start, end)
     }
 }
 
-pub(crate) trait FindWord {
+pub trait FindWordRange {
     fn get_word_range_at_idx(self, idx: usize) -> std::ops::Range<usize>;
 }
 
-impl FindWord for &str {
+impl FindWordRange for &str {
     fn get_word_range_at_idx(self, search_idx: usize) -> std::ops::Range<usize> {
         fn is_identifier(c: &char) -> bool {
             !(c.is_whitespace()
@@ -130,16 +136,65 @@ impl FindWord for &str {
     }
 }
 
-pub(crate) fn parse_pest_grammar(
-    grammar: &str,
-) -> Result<Pairs<parser::Rule>, Vec<pest::error::Error<parser::Rule>>> {
-    let pairs = match parser::parse(parser::Rule::grammar_rules, grammar) {
-        Ok(pairs) => Ok(pairs),
-        Err(error) => Err(vec![error]),
-    }?;
+pub trait IntoDiagnostics {
+    fn into_diagnostics(&self) -> Vec<Diagnostic>;
+}
 
-    validator::validate_pairs(pairs.clone())?;
-    parser::consume_rules(pairs.clone())?;
+impl IntoDiagnostics for Vec<pest::error::Error<Rule>> {
+    fn into_diagnostics(&self) -> Vec<Diagnostic> {
+        self.iter()
+            .map(|e| {
+                Diagnostic::new(
+                    e.line_col.clone().into_range(),
+                    Some(DiagnosticSeverity::ERROR),
+                    None,
+                    Some("Pest Language Server".to_owned()),
+                    match &e.variant {
+                        ErrorVariant::ParsingError {
+                            positives,
+                            negatives,
+                        } => {
+                            let mut message = "Parsing error".to_owned();
+                            if !positives.is_empty() {
+                                message.push_str(" (expected ");
+                                message.push_str(
+                                    positives
+                                        .iter()
+                                        .map(|s| format!("\"{:#?}\"", s))
+                                        .collect::<Vec<String>>()
+                                        .join(", ")
+                                        .as_str(),
+                                );
+                                message.push(')');
+                            }
 
-    Ok(pairs)
+                            if !negatives.is_empty() {
+                                message.push_str(" (unexpected ");
+                                message.push_str(
+                                    negatives
+                                        .iter()
+                                        .map(|s| format!("\"{:#?}\"", s))
+                                        .collect::<Vec<String>>()
+                                        .join(", ")
+                                        .as_str(),
+                                );
+                                message.push(')');
+                            }
+
+                            message
+                        }
+                        ErrorVariant::CustomError { message } => {
+                            let mut c = message.chars();
+                            match c.next() {
+                                None => String::new(),
+                                Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+                            }
+                        }
+                    },
+                    None,
+                    None,
+                )
+            })
+            .collect()
+    }
 }

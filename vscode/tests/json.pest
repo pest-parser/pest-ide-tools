@@ -10,14 +10,12 @@ pair   = { string ~ ":" ~ value }
 
 array = { "[" ~ value ~ ("," ~ value)* ~ "]" | "[" ~ "]" }
 
-/*
-  Match value
-*/
+/* Match value */
 value = { string | number | object | array | bool | null }
 
-string  = @{ "\"" ~ inner ~ "\"" }
-inner   = @{ (!("\"" | "\\") ~ ANY)* ~ (escape ~ inner)? }
-escape  = @{ "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" | unicode) }
+string = @{ "\"" ~ inner ~ "\"" }
+inner  = @{ (!("\"" | "\\") ~ ANY)* ~ (escape ~ inner)? }
+escape = @{ "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" | unicode) }
 // Unicode, e.g.: `u0000`
 unicode = @{ "u" ~ ASCII_HEX_DIGIT{4} }
 

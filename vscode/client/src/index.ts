@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-
+import { findServer } from "./server";
 import {
 	commands,
 	ExtensionContext,
@@ -12,7 +11,6 @@ import {
 	WorkspaceFoldersChangeEvent,
 } from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
-import { findServer } from "./server";
 
 const extensionName = "Pest Language Server";
 export const outputChannel = window.createOutputChannel(extensionName);
@@ -36,7 +34,10 @@ async function openDocument(uri: Uri) {
 	return uri;
 }
 
-async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
+async function startClientsForFolder(
+	folder: WorkspaceFolder,
+	ctx: ExtensionContext
+) {
 	const command = await findServer();
 
 	if (!command) {
@@ -48,8 +49,7 @@ async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
 	}
 
 	const root = folder.uri;
-
-	const pestFilesIncluded: Set<string> = new Set();
+	const pestFiles: Set<string> = new Set();
 
 	const deleteWatcher = workspace.createFileSystemWatcher(
 		pestFilesInFolderPattern(root),
@@ -72,7 +72,6 @@ async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
 		extensionName,
 		{
 			command,
-			args: ["--no-update-check"],
 		},
 		{
 			documentSelector: [
@@ -86,12 +85,11 @@ async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
 	);
 
 	ctx.subscriptions.push(client.start());
-
 	ctx.subscriptions.push(createChangeWatcher.onDidCreate(openDocument));
 	ctx.subscriptions.push(createChangeWatcher.onDidChange(openDocument));
 
 	const openedFiles = await openPestFilesInFolder(root);
-	openedFiles.forEach(f => pestFilesIncluded.add(f.toString()));
+	openedFiles.forEach(f => pestFiles.add(f.toString()));
 	clients.set(root.toString(), client);
 }
 
@@ -100,7 +98,7 @@ function stopClient(client: LanguageClient) {
 	return client.stop();
 }
 
-async function stopClients(workspaceFolder: string) {
+async function stopClientsForFolder(workspaceFolder: string) {
 	const client = clients.get(workspaceFolder);
 	if (client) {
 		await stopClient(client);
@@ -111,15 +109,22 @@ async function stopClients(workspaceFolder: string) {
 
 function updateClients(context: ExtensionContext) {
 	return async function ({ added, removed }: WorkspaceFoldersChangeEvent) {
-		for (const folder of removed) await stopClients(folder.uri.toString());
-		for (const folder of added) await startClients(folder, context);
+		for (const folder of removed) {
+			await stopClientsForFolder(folder.uri.toString());
+		}
+
+		for (const folder of added) {
+			await startClientsForFolder(folder, context);
+		}
 	};
 }
 
 export async function activate(context: ExtensionContext): Promise<void> {
 	const folders = workspace.workspaceFolders || [];
 
-	for (const folder of folders) await startClients(folder, context);
+	for (const folder of folders) {
+		await startClientsForFolder(folder, context);
+	}
 
 	context.subscriptions.push(
 		workspace.onDidChangeWorkspaceFolders(updateClients(context))
@@ -133,7 +138,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 					await stopClient(client);
 
 					if (folder) {
-						await startClients(folder, context);
+						await startClientsForFolder(folder, context);
 					}
 				}
 			}
@@ -155,7 +160,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 			await stopClient(client);
 
 			if (folder) {
-				await startClients(folder, context);
+				await startClientsForFolder(folder, context);
 			}
 		}
 	});

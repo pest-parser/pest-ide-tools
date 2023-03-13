@@ -5,7 +5,7 @@ module.exports = {
 	rules: {
 		quotes: ["error", "double"],
 		indent: ["off"],
-		"no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+		"no-unused-vars": ["error", { argsIgnorePattern: "_" }],
 	},
 	overrides: [
 		{
