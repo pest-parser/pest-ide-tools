@@ -9,8 +9,8 @@ use lsp::PestLanguageServerImpl;
 use tokio::sync::RwLock;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::{
-    DidChangeWatchedFilesParams, DocumentFormattingParams, InitializeParams, InitializeResult,
-    InitializedParams, DidChangeConfigurationParams,
+    DidChangeConfigurationParams, DidChangeWatchedFilesParams, DocumentFormattingParams,
+    InitializeParams, InitializeResult, InitializedParams,
 };
 use tower_lsp::{
     lsp_types::{
@@ -60,11 +60,9 @@ impl LanguageServer for PestLanguageServer {
         self.0.read().await.shutdown().await
     }
 
-
     async fn did_change_configuration(&self, params: DidChangeConfigurationParams) {
         self.0.write().await.did_change_configuration(params).await;
     }
-
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
         self.0.write().await.did_open(params).await;
