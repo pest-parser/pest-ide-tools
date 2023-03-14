@@ -34,6 +34,9 @@ jobs:
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
+      - name: Get Changelog
+        id: get_changelog
+        run: echo "COMMITS=$(awk -v latest="$(grep -Eo '^## v[0-9]+\.[0-9]+\.[0-9]+$' CHANGELOG.md | head -n1)" '/^## v/ {if (header) exit; header=1} /^## v'${latest}'/{print; next} header && !/^## v/{print}' CHANGELOG.md)" >> $GITHUB_OUTPUT
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -48,6 +51,8 @@ jobs:
             - [ ] Check VSCode extension was published correctly.
             - [ ] Check artifacts were uploaded to this release.
             - [ ] Update release body.
+
+            ${{ steps.get_changelog.outputs.COMMITS }}
           draft: true
           prerelease: false
       - uses: xresloader/upload-to-github-release@main
