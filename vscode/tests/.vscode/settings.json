@@ -1,5 +1,5 @@
 {
-    "pestIdeTools.serverPath": "/home/james/Development/pest-ide-support/target/debug/pest-language-server",
+    "pestIdeTools.serverPath": null,
     "pestIdeTools.alwaysUsedRuleNames": [
         "json"
     ]

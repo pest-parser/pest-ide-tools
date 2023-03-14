@@ -1,10 +1,14 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+// eslint-disable-next-line prettier/prettier
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { outputChannel } from ".";
-import { exec, ExecException } from "child_process";
+import { exec, ExecException, spawn } from "child_process";
 import { stat } from "fs/promises";
 import fetch, { Response } from "node-fetch";
 import { join } from "path";
 import { promisify } from "util";
-import { ProgressLocation, window, workspace } from "vscode";
+import { Progress, ProgressLocation, window, workspace } from "vscode";
 
 export async function findServer(): Promise<string | undefined> {
 	const path = await findServerPath();
@@ -32,7 +36,6 @@ export async function findServer(): Promise<string | undefined> {
 
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			const latestVersion = (await res.json())["crate"][
 				"max_version"
 			] as string;
@@ -145,6 +148,8 @@ async function checkValidity(path: string): Promise<boolean> {
 }
 
 async function installBinaryViaCargoInstall(): Promise<boolean> {
+	outputChannel.appendLine("[TS] Installing server.");
+
 	return await window.withProgress(
 		{
 			location: ProgressLocation.Notification,
@@ -153,12 +158,40 @@ async function installBinaryViaCargoInstall(): Promise<boolean> {
 		},
 		async (progress, _) => {
 			try {
-				// await promisify(exec)("cargo install pest-language-server");
-				progress.report({ message: "Installing..." });
-				await promisify(exec)(
-					"cargo install --git https://github.com/pest-parser/pest-ide-tools --branch feat/tower-lsp --bin pest-language-server"
+				progress.report({ message: "Spawning `cargo install` command" });
+
+				const process = spawn(
+					"cargo",
+					[
+						"install",
+						"--git",
+						"https://github.com/pest-parser/pest-ide-tools",
+						"--branch",
+						"feat/tower-lsp",
+						"--bin",
+						"pest-language-server",
+					],
+					{ shell: true }
 				);
-				progress.report({ message: "Installed." });
+
+				process.stderr.on("data", data =>
+					logCargoInstallProgress(data.toString(), progress)
+				);
+
+				const exitCode = await new Promise((resolve, _) => {
+					process.on("close", resolve);
+				});
+
+				outputChannel.appendLine(
+					`[TS]: Cargo process exited with code ${exitCode as number}`
+				);
+
+				if (exitCode === 0) {
+					await window.showInformationMessage(
+						"Successfully installed Pest Language Server."
+					);
+				}
+
 				return true;
 			} catch (e) {
 				outputChannel.appendLine(`[TS] ${(e as ExecException).message}`);
@@ -167,4 +200,30 @@ async function installBinaryViaCargoInstall(): Promise<boolean> {
 			}
 		}
 	);
+}
+
+function logCargoInstallProgress(
+	data: string,
+	progress: Progress<{
+		message?: string | undefined;
+		increment?: number | undefined;
+	}>
+) {
+	data = data.trim();
+
+	let msg;
+
+	if (
+		data ===
+		"Updating git repository `https://github.com/pest-parser/pest-ide-tools`"
+	) {
+		msg = "Fetching crate";
+	} else if (data.startsWith("Compiling")) {
+		msg = `Compiling ${data.split("Compiling ")[1].split("v")[0]}`;
+	}
+
+	if (msg) {
+		outputChannel.appendLine(`[TS] \t${msg}`);
+		progress.report({ message: `\t${msg}` });
+	}
 }
