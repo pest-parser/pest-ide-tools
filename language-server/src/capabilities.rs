@@ -39,7 +39,7 @@ pub fn capabilities() -> InitializeResult {
                     ..Default::default()
                 }),
                 ..Default::default()
-            }),
+            }),            
             ..Default::default()
         },
         server_info: Some(ServerInfo {

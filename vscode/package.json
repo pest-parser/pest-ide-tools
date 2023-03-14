@@ -63,18 +63,20 @@
 				"title": "Pest IDE Tools",
 				"properties": {
 					"pestIdeTools.serverPath": {
-						"type": [
-							"string"
-						],
+						"type": "string",
 						"description": "Set a custom path to a Pest LS binary.",
 						"scope": "window"
 					},
 					"pestIdeTools.checkForUpdates": {
-						"type": [
-							"boolean"
-						],
+						"type": "boolean",
 						"description": "Check for updates to the Pest LS binary.",
-						"default": true,
+						"default": false,
+						"scope": "window"
+					},
+					"pestIdeTools.alwaysUsedRuleNames": {
+						"type": "array",
+						"description": "Rule names that should not be included in the unused rule names diagnostic.",
+						"default": [],
 						"scope": "window"
 					}
 				}

@@ -1,5 +1,7 @@
 pub const BUILTINS: &[&str] = &[
     "ANY",
+    "WHITESPACE",
+    "COMMENT",
     "SOI",
     "EOI",
     "ASCII_DIGIT",

@@ -4,12 +4,13 @@ use std::process::exit;
 use std::sync::Arc;
 
 use capabilities::capabilities;
+use config::Config;
 use lsp::PestLanguageServerImpl;
 use tokio::sync::RwLock;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::{
     DidChangeWatchedFilesParams, DocumentFormattingParams, InitializeParams, InitializeResult,
-    InitializedParams,
+    InitializedParams, DidChangeConfigurationParams,
 };
 use tower_lsp::{
     lsp_types::{
@@ -25,6 +26,7 @@ use tower_lsp::{Client, LspService, Server};
 mod analysis;
 mod builtins;
 mod capabilities;
+mod config;
 mod helpers;
 mod lsp;
 mod update_checker;
@@ -38,6 +40,7 @@ impl PestLanguageServer {
         Self(Arc::new(RwLock::new(PestLanguageServerImpl {
             analyses: BTreeMap::new(),
             client,
+            config: Config::default(),
             documents: BTreeMap::new(),
         })))
     }
@@ -50,12 +53,18 @@ impl LanguageServer for PestLanguageServer {
     }
 
     async fn initialized(&self, params: InitializedParams) {
-        self.0.read().await.initialized(params).await;
+        self.0.write().await.initialized(params).await;
     }
 
     async fn shutdown(&self) -> Result<()> {
         self.0.read().await.shutdown().await
     }
+
+
+    async fn did_change_configuration(&self, params: DidChangeConfigurationParams) {
+        self.0.write().await.did_change_configuration(params).await;
+    }
+
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
         self.0.write().await.did_open(params).await;

@@ -18,23 +18,17 @@ export async function findServer(): Promise<string | undefined> {
 	const config = workspace.getConfiguration("pestIdeTools");
 	const updateCheckerEnabled = config.get("checkForUpdates") as boolean;
 
+	const { stdout: currentVersion } = await promisify(exec)(`${path} --version`);
+	outputChannel.appendLine(`[TS] Server version: v${currentVersion.trimEnd()}`);
+
 	if (updateCheckerEnabled) {
 		try {
-			const { stdout: currentVersion } = await promisify(exec)(
-				`${path} --version`
-			);
-			outputChannel.appendLine(
-				`[TS] Server version: v${currentVersion.trimEnd()}`
-			);
-
-			const res = (await Promise.race([
-				fetch("https://crates.io/api/v1/crates/pest_language_server"),
-				new Promise(() => {
-					setTimeout(() => {
-						throw new Error("Timed out.");
-					}, 2000);
-				}),
-			])) as Response;
+			const abortController = new AbortController();
+			const timeout = setTimeout(() => abortController.abort(), 2000);
+			const res = (await fetch(
+				"https://crates.io/api/v1/crates/pest_language_server",
+				{ signal: abortController.signal }
+			).then(() => clearTimeout(timeout))) as Response;
 
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
@@ -74,14 +68,14 @@ async function findServerPath(): Promise<string | undefined> {
 		return config.get("serverPath") as string;
 	}
 
-	const cargoInstallRoot = getCargoInstallRoot();
+	const cargoBinDirectory = getCargoBinDirectory();
 
-	if (!cargoInstallRoot) {
+	if (!cargoBinDirectory) {
 		outputChannel.appendLine("[TS] Could not find cargo bin directory.");
 		return undefined;
 	}
 
-	const expectedPath = join(cargoInstallRoot, getExpectedBinaryName());
+	const expectedPath = join(cargoBinDirectory, getExpectedBinaryName());
 
 	if (await checkValidity(expectedPath)) {
 		return expectedPath;
@@ -108,7 +102,7 @@ async function findServerPath(): Promise<string | undefined> {
 	return undefined;
 }
 
-function getCargoInstallRoot(): string | undefined {
+function getCargoBinDirectory(): string | undefined {
 	const cargoInstallRoot = process.env["CARGO_INSTALL_ROOT"];
 
 	if (cargoInstallRoot) {

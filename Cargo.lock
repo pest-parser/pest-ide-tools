@@ -704,6 +704,7 @@ dependencies = [
  "pest_fmt",
  "pest_meta",
  "reqwest",
+ "serde",
  "serde_json",
  "tokio",
  "tower-lsp",

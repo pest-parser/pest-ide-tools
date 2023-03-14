@@ -6,19 +6,21 @@ use tower_lsp::{
     lsp_types::{
         request::{GotoDeclarationParams, GotoDeclarationResponse},
         CompletionItem, CompletionItemKind, CompletionParams, CompletionResponse,
-        DeleteFilesParams, DidChangeTextDocumentParams, DidChangeWatchedFilesParams,
+        ConfigurationItem, DeleteFilesParams, Diagnostic, DiagnosticSeverity,
+        DidChangeConfigurationParams, DidChangeTextDocumentParams, DidChangeWatchedFilesParams,
         DidOpenTextDocumentParams, DocumentChanges, DocumentFormattingParams, FileChangeType,
         FileDelete, FileEvent, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverContents,
         HoverParams, InitializedParams, Location, MarkedString, MessageType, OneOf,
         OptionalVersionedTextDocumentIdentifier, Position, PublishDiagnosticsParams, Range,
         ReferenceParams, RenameParams, TextDocumentEdit, TextDocumentItem, TextEdit, Url,
-        VersionedTextDocumentIdentifier, WorkspaceEdit, DiagnosticSeverity, Diagnostic,
+        VersionedTextDocumentIdentifier, WorkspaceEdit,
     },
     Client,
 };
 
 use crate::{
     analysis::Analysis,
+    config::Config,
     helpers::{
         create_empty_diagnostics, Diagnostics, Documents, FindWordRange, IntoDiagnostics,
         IntoRangeWithLine,
@@ -31,10 +33,39 @@ pub struct PestLanguageServerImpl {
     pub client: Client,
     pub documents: Documents,
     pub analyses: BTreeMap<Url, Analysis>,
+    pub config: Config,
 }
 
 impl PestLanguageServerImpl {
-    pub async fn initialized(&self, _: InitializedParams) {
+    pub async fn initialized(&mut self, _: InitializedParams) {
+        let config_items = self
+            .client
+            .configuration(vec![ConfigurationItem {
+                scope_uri: None,
+                section: Some("pestIdeTools".to_string()),
+            }])
+            .await;
+
+        let mut updated_config = false;
+
+        if let Ok(config_items) = config_items {
+            if let Some(config) = config_items.into_iter().next() {
+                if let Ok(config) = serde_json::from_value(config) {
+                    self.config = config;
+                    updated_config = true;
+                }
+            }
+        }
+
+        if !updated_config {
+            self.client
+                .log_message(
+                    MessageType::ERROR,
+                    "Failed to retrieve configuration from client.",
+                )
+                .await;
+        }
+
         self.client
             .log_message(
                 MessageType::INFO,
@@ -42,16 +73,18 @@ impl PestLanguageServerImpl {
             )
             .await;
 
-        if let Some(new_version) = check_for_updates().await {
-            self.client
-                .show_message(
-                    MessageType::INFO,
-                    format!(
-                        "A new version of the Pest Language Server is available: v{}",
-                        new_version
-                    ),
-                )
-                .await;
+        if self.config.check_for_updates {
+            if let Some(new_version) = check_for_updates().await {
+                self.client
+                    .show_message(
+                        MessageType::INFO,
+                        format!(
+                            "A new version of the Pest Language Server is available: v{}",
+                            new_version
+                        ),
+                    )
+                    .await;
+            }
         }
     }
 
@@ -60,6 +93,21 @@ impl PestLanguageServerImpl {
             .log_message(MessageType::INFO, "Pest Language Server shutting down :)")
             .await;
         Ok(())
+    }
+
+    pub async fn did_change_configuration(&mut self, params: DidChangeConfigurationParams) {
+        self.client.log_message(MessageType::INFO, format!("{:#?}", params)).await;
+        if let Some(config) = params.settings.get("pestIdeTools") {
+            if let Ok(config) = serde_json::from_value(config.clone()) {
+                self.config = config;
+                self.client
+                    .log_message(
+                        MessageType::INFO,
+                        "Updated configuration from client.".to_string(),
+                    )
+                    .await;
+            }
+        }
     }
 
     pub async fn did_open(&mut self, params: DidOpenTextDocumentParams) {
@@ -479,14 +527,15 @@ impl PestLanguageServerImpl {
                     diagnostics.insert(url.clone(), empty_diagnostics);
                 }
 
-                self.analyses.entry(url.clone()).or_insert_with(|| {
-                    Analysis {
+                self.analyses
+                    .entry(url.clone())
+                    .or_insert_with(|| Analysis {
                         doc_url: url.clone(),
                         rule_names: BTreeMap::new(),
                         rule_occurrences: BTreeMap::new(),
                         rule_docs: BTreeMap::new(),
-                    }
-                }).update_from(pairs);
+                    })
+                    .update_from(pairs);
             } else if let Err(errors) = pairs {
                 diagnostics.insert(
                     url.clone(),
@@ -498,25 +547,27 @@ impl PestLanguageServerImpl {
                 );
             }
 
-            // if let Some(analysis) = self.analyses.get(url) {
-            //     for (rule_name, rule_location) in analysis.get_unused_rules() {
-            //         diagnostics
-            //             .entry(url.clone())
-            //             .or_insert_with(|| create_empty_diagnostics((url, document)).1)
-            //             .diagnostics
-            //             .push(
-            //                 Diagnostic::new(
-            //                     rule_location.range,
-            //                     Some(DiagnosticSeverity::WARNING),
-            //                     None,
-            //                     Some("Pest Language Server".to_owned()),
-            //                     format!("Rule {} is unused", rule_name),
-            //                     None,
-            //                     None,
-            //                 )
-            //             );
-            //     }
-            // }
+            if let Some(analysis) = self.analyses.get(url) {
+                for (rule_name, rule_location) in
+                    analysis.get_unused_rules().iter().filter(|(rule_name, _)| {
+                        !self.config.always_used_rule_names.contains(rule_name)
+                    })
+                {
+                    diagnostics
+                        .entry(url.clone())
+                        .or_insert_with(|| create_empty_diagnostics((url, document)).1)
+                        .diagnostics
+                        .push(Diagnostic::new(
+                            rule_location.range,
+                            Some(DiagnosticSeverity::WARNING),
+                            None,
+                            Some("Pest Language Server".to_owned()),
+                            format!("Rule {} is unused", rule_name),
+                            None,
+                            None,
+                        ));
+                }
+            }
         }
 
         diagnostics
