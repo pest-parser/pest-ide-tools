@@ -2,32 +2,58 @@
 
 _IDE support for [Pest](https://pest.rs), via the LSP._
 
-This repository contains an implementation of the _Language Server Protocol_ for
-the [Pest](https://pest.rs) parser generator.
+This repository contains an implementation of the _Language Server Protocol_ in Rust, for
+the Pest parser generator.
+
+<p align="center">
+  <img src="demo.gif" alt="A demo of the Pest VSCode extension." />
+</p>
 
 ## Features
 
-- [x] Error reporting.
-- [x] Syntax highlighting.
-- [x] Rename support.
-- [x] Go to declaration/definition.
-- [x] Find references.
-- [x] Highlighting a rule highlights it's references.
-- [x] Hover information for built-in rules.
-- [x] Intellisense/completion of rule names.
-- [x] Formatting.
-- [ ] Debugging.
+- Error reporting.
+- Warnings for unused rules.
+- Syntax highlighting definitions available.
+- Rename rules.
+- Go to rule declaration, definition, or references.
+- Hover information for built-in rules and documented rules.
+- Autocompletion of defined rule names.
+- Formatting.
+- Update checking.
 
 Please see the
 [issues page](https://github.com/pest-parser/pest-ide-support/issues) to suggest
 features or view previous suggestions.
 
-## Supported IDEs
+## Usage
+
+### Supported IDEs
 
 - [Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=pest.pest-ide-tools)
+  - VSCode has a pre-built extension that can compile, update, and start up the language server. It also includes syntax highlighting definitions.
 
 Due to the usage of the LSP by this project, adding support for new IDEs should
-be far more achievable than a custom implementation for each editor. Please see the [tracking issue]() to request support for another IDE or view the current status of IDE support.
+be far more achievable than a custom implementation for each editor. Please see the [tracking issue](https://github.com/pest-parser/pest-ide-tools/issues/10) to request support for another IDE or view the current status of IDE support.
+
+### Config
+
+The method of updating your config is editor specific.
+
+The available options are:
+
+```jsonc
+{
+  // Set a custom path to a Pest LS binary.
+  "pestIdeTools.serverPath": "/path/to/binary",
+  // Check for updates to the Pest LS binary via crates.io
+  "pestIdeTools.checkForUpdates": true,
+  // Ignore specific rule names for the unused rules diagnostics (useful for specifying root rules)
+  "pestIdeTools.alwaysUsedRuleNames": [
+    "rule_one",
+    "rule_two"
+  ]
+}
+```
 
 ## Development
 
@@ -45,7 +71,7 @@ The server itself is implemented in Rust using `tower-lsp`. It communicates with
 editors via JSON-RPC through standard input/output, according to the language
 server protocol.
 
-## Contributing
+### Contributing
 
 We appreciate contributions! I recommend reaching out on Discord (the invite to
 which can be found at [pest.rs](https://pest.rs)) before contributing, to check
