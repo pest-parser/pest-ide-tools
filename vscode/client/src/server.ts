@@ -76,6 +76,7 @@ async function findServerPath(): Promise<string | undefined> {
 	}
 
 	const expectedPath = join(cargoBinDirectory, getExpectedBinaryName());
+	outputChannel.appendLine(`[TS] Trying path ${expectedPath}...`);
 
 	if (await checkValidity(expectedPath)) {
 		return expectedPath;
@@ -88,6 +89,7 @@ async function findServerPath(): Promise<string | undefined> {
 	);
 
 	if (!choice) {
+		outputChannel.appendLine("[TS] Not installing server.");
 		return undefined;
 	}
 
