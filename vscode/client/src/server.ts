@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 // eslint-disable-next-line prettier/prettier
+
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
+
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { outputChannel } from ".";
 import { exec, ExecException, spawn } from "child_process";
@@ -120,7 +122,11 @@ function getCargoBinDirectory(): string | undefined {
 		return join(cargoHome, "bin");
 	}
 
-	const home = process.env["HOME"];
+	let home = process.env["HOME"];
+
+	if (process.platform === "win32") {
+		home = process.env["USERPROFILE"];
+	}
 
 	if (home) {
 		return join(home, ".cargo", "bin");
