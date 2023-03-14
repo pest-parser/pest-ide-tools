@@ -184,21 +184,23 @@ async function installBinaryViaCargoInstall(): Promise<boolean> {
 					logCargoInstallProgress(data.toString(), progress)
 				);
 
-				const exitCode = await new Promise((resolve, _) => {
+				const exitCode: number = await new Promise((resolve, _) => {
 					process.on("close", resolve);
 				});
 
 				outputChannel.appendLine(
-					`[TS]: Cargo process exited with code ${exitCode as number}`
+					`[TS]: Cargo process exited with code ${exitCode}`
 				);
 
 				if (exitCode === 0) {
 					await window.showInformationMessage(
 						"Successfully installed Pest Language Server."
 					);
-				}
 
-				return true;
+					return true;
+				} else {
+					throw new Error(`Received non-zero exit code: ${exitCode}`);
+				}
 			} catch (e) {
 				outputChannel.appendLine(`[TS] ${(e as ExecException).message}`);
 				progress.report({ message: "An error occurred." });
@@ -218,14 +220,15 @@ function logCargoInstallProgress(
 	data = data.trim();
 
 	let msg;
+	const versionRegex = /v[0-9]+\.[0-9]+\.[0-9]+/;
 
 	if (
 		data ===
 		"Updating git repository `https://github.com/pest-parser/pest-ide-tools`"
 	) {
-		msg = "Fetching crate";
+		msg = "fetching crate";
 	} else if (data.startsWith("Compiling")) {
-		msg = `Compiling ${data.split("Compiling ")[1].split("v")[0]}`;
+		msg = `Compiling ${data.split("compiling ")[1].split(versionRegex)[0]}`;
 	}
 
 	if (msg) {
