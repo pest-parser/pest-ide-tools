@@ -7,7 +7,7 @@
 import { outputChannel } from ".";
 import { exec, ExecException, spawn } from "child_process";
 import { stat } from "fs/promises";
-import fetch, { Response } from "node-fetch";
+import fetch from "node-fetch";
 import { join } from "path";
 import { promisify } from "util";
 import { Progress, ProgressLocation, window, workspace } from "vscode";
@@ -31,16 +31,17 @@ export async function findServer(): Promise<string | undefined> {
 		try {
 			const abortController = new AbortController();
 			const timeout = setTimeout(() => abortController.abort(), 2000);
-			const res = (await fetch(
+			const res = await fetch(
 				"https://crates.io/api/v1/crates/pest_language_server",
 				{ signal: abortController.signal }
-			).then(() => clearTimeout(timeout))) as Response;
+			).then(res => {
+				clearTimeout(timeout);
+				return res.json();
+			});
 
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
-			const latestVersion = (await res.json())["crate"][
-				"max_version"
-			] as string;
+			const latestVersion = res["crate"]["max_version"] as string;
 
 			if (currentVersion !== latestVersion) {
 				const choice = await window.showInformationMessage(
