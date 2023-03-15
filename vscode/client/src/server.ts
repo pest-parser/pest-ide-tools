@@ -32,7 +32,7 @@ export async function findServer(): Promise<string | undefined> {
 			const abortController = new AbortController();
 			const timeout = setTimeout(() => abortController.abort(), 2000);
 			const res = await fetch(
-				"https://crates.io/api/v1/crates/pest_language_server",
+				"https://crates.io/api/v1/crates/pest-language-server",
 				{ signal: abortController.signal }
 			).then(res => {
 				clearTimeout(timeout);
@@ -167,19 +167,9 @@ async function installBinaryViaCargoInstall(): Promise<boolean> {
 			try {
 				progress.report({ message: "Spawning `cargo install` command" });
 
-				const process = spawn(
-					"cargo",
-					[
-						"install",
-						"--git",
-						"https://github.com/pest-parser/pest-ide-tools",
-						"--branch",
-						"feat/tower-lsp",
-						"--bin",
-						"pest-language-server",
-					],
-					{ shell: true }
-				);
+				const process = spawn("cargo", ["install", "pest-language-server"], {
+					shell: true,
+				});
 
 				process.stderr.on("data", data =>
 					logCargoInstallProgress(data.toString(), progress)
