@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::env::args;
 use std::process::exit;
 use std::sync::Arc;
@@ -38,10 +38,10 @@ pub struct PestLanguageServer(Arc<RwLock<PestLanguageServerImpl>>);
 impl PestLanguageServer {
     pub fn new(client: Client) -> Self {
         Self(Arc::new(RwLock::new(PestLanguageServerImpl {
-            analyses: BTreeMap::new(),
+            analyses: HashMap::new(),
             client,
             config: Config::default(),
-            documents: BTreeMap::new(),
+            documents: HashMap::new(),
         })))
     }
 }

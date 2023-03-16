@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 use pest::{
     error::{ErrorVariant, LineColLocation},
@@ -12,8 +12,8 @@ use tower_lsp::lsp_types::{
 
 use pest_meta::parser::{self, Rule};
 
-pub type Documents = BTreeMap<Url, TextDocumentItem>;
-pub type Diagnostics = BTreeMap<Url, PublishDiagnosticsParams>;
+pub type Documents = HashMap<Url, TextDocumentItem>;
+pub type Diagnostics = HashMap<Url, PublishDiagnosticsParams>;
 
 pub fn create_empty_diagnostics(
     (uri, doc): (&Url, &TextDocumentItem),

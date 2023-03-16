@@ -1,7 +1,7 @@
 use pest::iterators::Pairs;
 use pest_meta::parser::Rule;
 use reqwest::Url;
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use tower_lsp::lsp_types::Location;
 
 use crate::{
@@ -16,19 +16,19 @@ pub struct Analysis {
     pub doc_url: Url,
     /// Maps rule names to their locations in the document. If the rule is a builtin, the location
     /// will be `None`.
-    pub rule_names: BTreeMap<String, Option<Location>>,
+    pub rule_names: HashMap<String, Option<Location>>,
     /// Maps rule names to all of their occurrences in the document, including their definition.
-    pub rule_occurrences: BTreeMap<String, Vec<Location>>,
+    pub rule_occurrences: HashMap<String, Vec<Location>>,
     /// Maps rule names to their documentation, in Markdown.
-    pub rule_docs: BTreeMap<String, String>,
+    pub rule_docs: HashMap<String, String>,
 }
 
 impl Analysis {
     /// Updates this analysis from the given pairs.
     pub fn update_from(&mut self, pairs: Pairs<Rule>) {
-        self.rule_names = BTreeMap::new();
-        self.rule_docs = BTreeMap::new();
-        self.rule_occurrences = BTreeMap::new();
+        self.rule_names = HashMap::new();
+        self.rule_docs = HashMap::new();
+        self.rule_occurrences = HashMap::new();
 
         for builtin in BUILTINS.iter() {
             self.rule_names.insert(builtin.to_string(), None);

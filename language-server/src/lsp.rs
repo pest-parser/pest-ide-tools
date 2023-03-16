@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, str::Split};
+use std::{collections::HashMap, str::Split};
 
 use pest_meta::{parser, validator};
 use tower_lsp::{
@@ -32,7 +32,7 @@ use crate::{builtins::get_builtin_description, update_checker::check_for_updates
 pub struct PestLanguageServerImpl {
     pub client: Client,
     pub documents: Documents,
-    pub analyses: BTreeMap<Url, Analysis>,
+    pub analyses: HashMap<Url, Analysis>,
     pub config: Config,
 }
 
@@ -198,7 +198,7 @@ impl PestLanguageServerImpl {
             }
         }
 
-        diagnostics.append(&mut self.reload().await);
+        diagnostics.extend(self.reload().await);
         self.send_diagnostics(diagnostics).await;
     }
 
@@ -243,7 +243,7 @@ impl PestLanguageServerImpl {
         }
 
         if !diagnostics.is_empty() {
-            diagnostics.append(&mut self.reload().await);
+            diagnostics.extend(self.reload().await);
             self.send_diagnostics(diagnostics).await;
         }
     }
@@ -533,9 +533,9 @@ impl PestLanguageServerImpl {
                     .entry(url.clone())
                     .or_insert_with(|| Analysis {
                         doc_url: url.clone(),
-                        rule_names: BTreeMap::new(),
-                        rule_occurrences: BTreeMap::new(),
-                        rule_docs: BTreeMap::new(),
+                        rule_names: HashMap::new(),
+                        rule_occurrences: HashMap::new(),
+                        rule_docs: HashMap::new(),
                     })
                     .update_from(pairs);
             } else if let Err(errors) = pairs {
