@@ -48,6 +48,10 @@ async function startClientsForFolder(
 		return;
 	}
 
+	const customArgs = workspace
+		.getConfiguration("pestIdeTools")
+		.get("customArgs") as string[];
+
 	const root = folder.uri;
 	const pestFiles: Set<string> = new Set();
 
@@ -72,6 +76,7 @@ async function startClientsForFolder(
 		extensionName,
 		{
 			command,
+			args: ["--no-update-check", ...customArgs],
 		},
 		{
 			documentSelector: [

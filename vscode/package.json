@@ -67,6 +67,11 @@
 						"description": "Set a custom path to a Pest LS binary.",
 						"scope": "window"
 					},
+					"pestIdeTools.customArgs": {
+						"type": "array",
+						"description": "Additional arguments that should be passed to the Pest LS binary.",
+						"scope": "window"
+					},
 					"pestIdeTools.checkForUpdates": {
 						"type": "boolean",
 						"description": "Check for updates to the Pest LS binary.",
