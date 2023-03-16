@@ -3,7 +3,7 @@ use std::time::Duration;
 use reqwest::ClientBuilder;
 
 /// Checks crates.io for updates to pest_language_server.
-/// Returns the latest version if not already installed, otherwise `None`.
+/// Returns the latest version if not already installed, otherwise [None].
 pub async fn check_for_updates() -> Option<String> {
     let client = ClientBuilder::new()
         .user_agent(concat!(

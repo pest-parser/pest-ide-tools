@@ -32,7 +32,7 @@ mod lsp;
 mod update_checker;
 
 #[derive(Debug)]
-/// The async-ready language server. You probably want `PestLanguageServerImpl` instead.
+/// The async-ready language server. You probably want [PestLanguageServerImpl] instead.
 pub struct PestLanguageServer(Arc<RwLock<PestLanguageServerImpl>>);
 
 impl PestLanguageServer {

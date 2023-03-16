@@ -15,7 +15,7 @@ pub struct Analysis {
     /// The URL of the document that this analysis is for.
     pub doc_url: Url,
     /// Maps rule names to their locations in the document. If the rule is a builtin, the location
-    /// will be `None`.
+    /// will be [None].
     pub rule_names: HashMap<String, Option<Location>>,
     /// Maps rule names to all of their occurrences in the document, including their definition.
     pub rule_occurrences: HashMap<String, Vec<Location>>,
