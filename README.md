@@ -43,8 +43,10 @@ The available options are:
 
 ```jsonc
 {
-  // Set a custom path to a Pest LS binary.
+  // Set a custom path to a Pest LS binary
   "pestIdeTools.serverPath": "/path/to/binary",
+  // Custom arguments to pass to the Pest LS binary
+  "pestIdeTools.customArgs": [],
   // Check for updates to the Pest LS binary via crates.io
   "pestIdeTools.checkForUpdates": true,
   // Ignore specific rule names for the unused rules diagnostics (useful for specifying root rules)
