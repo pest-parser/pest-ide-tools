@@ -27,14 +27,21 @@ jobs:
         run: npm install
 
       - name: Package VSCode Extension
-        run: task package-vscode
+        working-directory: vscode
+        run: npm run package
       - name: Publish to VSCode Marketplace
         working-directory: vscode
         run: npm run publish 
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
-      #TODO: Publish to crates.io
+      - name: Package Sublime Text Package
+        working-directory: sublime-text
+        run: zip pest.sublime-package *
+
+      - name: Publish to crates.io
+        working-directory: language-server
+        run: cargo publish --token ${{  }}
 
       - name: Get Changelog
         id: get_changelog
@@ -61,6 +68,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          file: "vscode/pest.vsix"
+          file: "vscode/pest.vsix;sublime-text/pest.sublime-package"
           release_id: ${{ steps.create_release.outputs.id }}
           overwrite: true

@@ -22,7 +22,7 @@ the Pest parser generator.
 - Update checking.
 
 Please see the
-[issues page](https://github.com/pest-parser/pest-ide-support/issues) to suggest
+[issues page](https://github.com/pest-parser/pest-ide-tools/issues) to suggest
 features or view previous suggestions.
 
 ## Usage

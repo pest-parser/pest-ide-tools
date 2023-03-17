@@ -1,52 +1,6 @@
 version: 3
 
 tasks:
-  rust-build:
-    desc: Compile the language server binary.
-    dir: language-server
-    
-    method: checksum
-    sources:
-      - src/**/*.rs
-      - '*.toml'
-    
-    cmds:
-      - cargo build
-
-  package-vscode:
-    desc: Package the VSCode extension into a VSIX file.
-    dir: vscode
-
-    method: checksum
-    sources:
-      - client/**/*
-      - server/**/*
-      - build/*
-      - syntaxes/*
-      - package.json
-      - package-lock.json
-    
-    cmds:
-      - npm run package
-
-  build:
-    desc: Build the language server and package the VSCode extension.
-    
-    deps:
-      - package-vscode
-
-  install:
-    desc: Build the language server, package the extension, then install it.
-    
-    method: checksum
-    sources:
-      - vscode/pest.vsix
-
-    deps:
-      - build
-    cmds:
-      - code --install-extension ./vscode/pest.vsix
-  
   rust-fmt-and-lint:
     desc: Format and lint the Rust code
     internal: true

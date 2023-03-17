@@ -2,8 +2,8 @@
 
 _IDE support for [Pest](https://pest.rs), via the LSP._
 
-This repository contains an implementation of the _Language Server Protocol_ in Rust, for
-the Pest parser generator.
+This repository contains an implementation of the _Language Server Protocol_ in
+Rust, for the Pest parser generator.
 
 <p align="center">
   <img src="demo.gif" alt="A demo of the Pest VSCode extension." />
@@ -22,50 +22,35 @@ the Pest parser generator.
 - Update checking.
 
 Please see the
-[issues page](https://github.com/pest-parser/pest-ide-support/issues) to suggest
+[issues page](https://github.com/pest-parser/pest-ide-tools/issues) to suggest
 features or view previous suggestions.
 
 ## Usage
 
+You can find documentation on how to set up the server for in the `DOCS.md`
+file.
+
 ### Supported IDEs
 
 - [Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=pest.pest-ide-tools)
-  - VSCode has a pre-built extension that can compile, update, and start up the language server. It also includes syntax highlighting definitions.
+  - VSCode has a pre-built extension that can compile, update, and start up the
+    language server. It also includes syntax highlighting definitions.
 
 Due to the usage of the LSP by this project, adding support for new IDEs should
-be far more achievable than a custom implementation for each editor. Please see the [tracking issue](https://github.com/pest-parser/pest-ide-tools/issues/10) to request support for another IDE or view the current status of IDE support.
-
-### Config
-
-The method of updating your config is editor specific.
-
-The available options are:
-
-```jsonc
-{
-  // Set a custom path to a Pest LS binary
-  "pestIdeTools.serverPath": "/path/to/binary",
-  // Custom arguments to pass to the Pest LS binary
-  "pestIdeTools.customArgs": [],
-  // Check for updates to the Pest LS binary via crates.io
-  "pestIdeTools.checkForUpdates": true,
-  // Ignore specific rule names for the unused rules diagnostics (useful for specifying root rules)
-  "pestIdeTools.alwaysUsedRuleNames": [
-    "rule_one",
-    "rule_two"
-  ]
-}
-```
+be far more achievable than a custom implementation for each editor. Please see
+the [tracking issue](https://github.com/pest-parser/pest-ide-tools/issues/10) to
+request support for another IDE or view the current status of IDE support.
 
 ## Development
 
-This repository uses a [Taskfile](https://taskfile.dev); install
-the `task` command for a better experience developing in this repository.
+This repository uses a [Taskfile](https://taskfile.dev); install the `task`
+command for a better experience developing in this repository.
 
-The task `fmt-and-lint` can be used to check the formatting and lint your code to ensure it
-fits with the rest of the repository.
+The task `fmt-and-lint` can be used to check the formatting and lint your code
+to ensure it fits with the rest of the repository.
 
-In VSCode, press `F5` to build and debug the VSCode extension.
+In VSCode, press `F5` to build and debug the VSCode extension. This is the only
+method of debugging that we have pre set-up.
 
 ### Architecture
 
