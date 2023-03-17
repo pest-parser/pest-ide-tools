@@ -4,23 +4,19 @@ module.exports = {
 	ignorePatterns: ["node_modules", "build"],
 	rules: {
 		quotes: ["error", "double"],
-		indent: ["error", "tab"],
-		"no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+		indent: ["off"],
+		"@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "_" }],
 	},
 	overrides: [
 		{
-			files: ["**/*.ts", "**/*.tsx"],
+			files: ["**/*.ts"],
 			extends: [
 				"plugin:@typescript-eslint/recommended",
 				"plugin:@typescript-eslint/recommended-requiring-type-checking",
 			],
 			parserOptions: {
 				tsconfigRootDir: __dirname,
-				project: [
-					"./client/tsconfig.json",
-					"./server/tsconfig.json",
-					"./test/tsconfig.json",
-				],
+				project: ["./client/tsconfig.json", "./test/tsconfig.json"],
 			},
 		},
 	],

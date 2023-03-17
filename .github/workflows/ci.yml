@@ -5,6 +5,26 @@ on:
   pull_request:
 
 jobs:
+  check:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          kind: check
+          secret: ${{ secrets.GITHUB_TOKEN }}
+      - name: Format and Lint
+        if: contains(matrix.os, 'ubuntu')
+        run: task fmt-and-lint
+      - name: Cargo Check
+        run: cargo check
+
   package-vscode:
     runs-on: ubuntu-latest
     steps:
@@ -15,9 +35,6 @@ jobs:
         with:
           kind: package-vscode
           secret: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install NPM Packages
-        working-directory: vscode
-        run: npm install
       - name: Package Extension
         run: task package-vscode
       - name: Upload Extension

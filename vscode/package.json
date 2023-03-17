@@ -57,11 +57,41 @@
 				"path": "./syntaxes/pest.tmLanguage.json"
 			}
 		],
+		"configuration": [
+			{
+				"id": "pestIdeTools",
+				"title": "Pest IDE Tools",
+				"properties": {
+					"pestIdeTools.serverPath": {
+						"type": "string",
+						"description": "Set a custom path to a Pest LS binary.",
+						"scope": "window"
+					},
+					"pestIdeTools.customArgs": {
+						"type": "array",
+						"description": "Additional arguments that should be passed to the Pest LS binary.",
+						"scope": "window"
+					},
+					"pestIdeTools.checkForUpdates": {
+						"type": "boolean",
+						"description": "Check for updates to the Pest LS binary.",
+						"default": false,
+						"scope": "window"
+					},
+					"pestIdeTools.alwaysUsedRuleNames": {
+						"type": "array",
+						"description": "Rule names that should not be included in the unused rule names diagnostic.",
+						"default": [],
+						"scope": "window"
+					}
+				}
+			}
+		],
 		"commands": [
 			{
-				"command": "pest-language-support.restartServer",
-				"title": "Restart Pest Language Server",
-				"category": "Pest Language Support"
+				"category": "Pest",
+				"command": "pestIdeTools.restartServer",
+				"title": "Restart Server"
 			}
 		]
 	},
@@ -70,18 +100,19 @@
 		"publish": "vsce publish --githubBranch main",
 		"fix": "gts fix",
 		"lint": "gts lint -- . --max-warnings 0",
-		"fmt": "prettier --write 'client/**/*.ts' 'server/**/*.ts' '*.js' '*.json' 'syntaxes/*.json'",
-		"esbuild": "npm run esbuild-client && npm run esbuild-server",
+		"fmt": "prettier --write 'client/**/*.ts' '*.js' 'language-configuration.json' 'tsconfig.json' 'syntaxes/*.json'",
+		"fmt-check": "prettier --check 'client/**/*.ts' '*.js' 'language-configuration.json' 'tsconfig.json' 'syntaxes/*.json'",
+		"esbuild-with-rust": "task rust-build -d .. && npm run esbuild-client",
 		"esbuild-client": "esbuild client=./client/src --bundle --outdir=build --external:vscode --format=cjs --platform=node --minify",
-		"esbuild-server": "esbuild server=./server/src --bundle --outdir=build --external:vscode --format=cjs --platform=node --minify",
-		"vscode:prepublish": "npm run esbuild-server && npm run esbuild-client"
+		"vscode:prepublish": "npm run esbuild-client"
 	},
 	"dependencies": {
-		"vscode-languageclient": "^7.0.0",
-		"vscode-languageserver": "^7.0.0"
+		"node-fetch": "^3.3.1",
+		"vscode-languageclient": "^7.0.0"
 	},
 	"devDependencies": {
-		"@types/node": "^16.18.12",
+		"@trivago/prettier-plugin-sort-imports": "^4.1.1",
+		"@types/node": "^18.15.0",
 		"@types/vscode": "^1.74.0",
 		"@typescript-eslint/eslint-plugin": "^5.52.0",
 		"@typescript-eslint/parser": "^5.52.0",

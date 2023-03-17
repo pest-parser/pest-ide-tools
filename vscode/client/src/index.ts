@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-
-import { join } from "path";
-
+import { findServer } from "./server";
 import {
+	commands,
 	ExtensionContext,
 	RelativePattern,
 	TextDocument,
@@ -12,14 +10,10 @@ import {
 	WorkspaceFolder,
 	WorkspaceFoldersChangeEvent,
 } from "vscode";
-import {
-	LanguageClient,
-	LanguageClientOptions,
-	TransportKind,
-} from "vscode-languageclient/node";
+import { LanguageClient } from "vscode-languageclient/node";
 
 const extensionName = "Pest Language Server";
-const outputChannel = window.createOutputChannel(extensionName);
+export const outputChannel = window.createOutputChannel(extensionName);
 
 const clients: Map<string, LanguageClient> = new Map();
 
@@ -40,11 +34,26 @@ async function openDocument(uri: Uri) {
 	return uri;
 }
 
-async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
-	const server = ctx.asAbsolutePath(join("build", "server.js"));
-	const root = folder.uri;
+async function startClientsForFolder(
+	folder: WorkspaceFolder,
+	ctx: ExtensionContext
+) {
+	const command = await findServer();
 
-	const pestFilesIncluded: Set<string> = new Set();
+	if (!command) {
+		outputChannel.appendLine("[TS] Aborting server start.");
+		await window.showErrorMessage(
+			"Not starting Pest Language Server as a suitable binary was not found."
+		);
+		return;
+	}
+
+	const customArgs = workspace
+		.getConfiguration("pestIdeTools")
+		.get("customArgs") as string[];
+
+	const root = folder.uri;
+	const pestFiles: Set<string> = new Set();
 
 	const deleteWatcher = workspace.createFileSystemWatcher(
 		pestFilesInFolderPattern(root),
@@ -63,25 +72,29 @@ async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
 	ctx.subscriptions.push(deleteWatcher);
 	ctx.subscriptions.push(createChangeWatcher);
 
-	const serverOpts = { module: server, transport: TransportKind.ipc };
-	const clientOpts: LanguageClientOptions = {
-		documentSelector: [
-			{ language: "pest", pattern: `${root.fsPath}/**/*.pest` },
-		],
-		synchronize: { fileEvents: deleteWatcher },
-		diagnosticCollectionName: extensionName,
-		workspaceFolder: folder,
-		outputChannel,
-	};
-	const client = new LanguageClient(extensionName, serverOpts, clientOpts);
+	const client = new LanguageClient(
+		extensionName,
+		{
+			command,
+			args: ["--no-update-check", ...customArgs],
+		},
+		{
+			documentSelector: [
+				{ language: "pest", pattern: `${root.fsPath}/**/*.pest` },
+			],
+			synchronize: { fileEvents: deleteWatcher },
+			diagnosticCollectionName: extensionName,
+			workspaceFolder: folder,
+			outputChannel,
+		}
+	);
 
 	ctx.subscriptions.push(client.start());
-
 	ctx.subscriptions.push(createChangeWatcher.onDidCreate(openDocument));
 	ctx.subscriptions.push(createChangeWatcher.onDidChange(openDocument));
 
 	const openedFiles = await openPestFilesInFolder(root);
-	openedFiles.forEach(f => pestFilesIncluded.add(f.toString()));
+	openedFiles.forEach(f => pestFiles.add(f.toString()));
 	clients.set(root.toString(), client);
 }
 
@@ -90,7 +103,7 @@ function stopClient(client: LanguageClient) {
 	return client.stop();
 }
 
-async function stopClients(workspaceFolder: string) {
+async function stopClientsForFolder(workspaceFolder: string) {
 	const client = clients.get(workspaceFolder);
 	if (client) {
 		await stopClient(client);
@@ -101,17 +114,61 @@ async function stopClients(workspaceFolder: string) {
 
 function updateClients(context: ExtensionContext) {
 	return async function ({ added, removed }: WorkspaceFoldersChangeEvent) {
-		for (const folder of removed) await stopClients(folder.uri.toString());
-		for (const folder of added) await startClients(folder, context);
+		for (const folder of removed) {
+			await stopClientsForFolder(folder.uri.toString());
+		}
+
+		for (const folder of added) {
+			await startClientsForFolder(folder, context);
+		}
 	};
 }
 
 export async function activate(context: ExtensionContext): Promise<void> {
 	const folders = workspace.workspaceFolders || [];
 
-	for (const folder of folders) await startClients(folder, context);
+	for (const folder of folders) {
+		await startClientsForFolder(folder, context);
+	}
 
-	workspace.onDidChangeWorkspaceFolders(updateClients(context));
+	context.subscriptions.push(
+		workspace.onDidChangeWorkspaceFolders(updateClients(context))
+	);
+
+	context.subscriptions.push(
+		workspace.onDidChangeConfiguration(async e => {
+			if (e.affectsConfiguration("pestIdeTools.serverPath")) {
+				for (const client of clients.values()) {
+					const folder = client.clientOptions.workspaceFolder;
+					await stopClient(client);
+
+					if (folder) {
+						await startClientsForFolder(folder, context);
+					}
+				}
+			}
+		})
+	);
+
+	commands.registerCommand("pestIdeTools.restartServer", async () => {
+		const currentFolder = workspace.workspaceFolders?.[0].uri.toString();
+
+		if (!currentFolder) {
+			await window.showInformationMessage("No Pest workspace is open.");
+			return;
+		}
+
+		const client = clients.get(currentFolder);
+
+		if (client) {
+			const folder = client.clientOptions.workspaceFolder;
+			await stopClient(client);
+
+			if (folder) {
+				await startClientsForFolder(folder, context);
+			}
+		}
+	});
 }
 
 export async function deactivate(): Promise<void> {

@@ -1,5 +1,7 @@
-pub(crate) const BUILTINS: &[&str] = &[
+pub const BUILTINS: &[&str] = &[
     "ANY",
+    "WHITESPACE",
+    "COMMENT",
     "SOI",
     "EOI",
     "ASCII_DIGIT",
@@ -272,7 +274,7 @@ pub(crate) const BUILTINS: &[&str] = &[
     "ZANABAZAR_SQUARE",
 ];
 
-pub(crate) fn get_builtin_description(rule: &str) -> Option<&str> {
+pub fn get_builtin_description(rule: &str) -> Option<&str> {
     match rule {
         "ANY" => Some("Matches any character."),
         "SOI" => Some("Matches the start of the input. Does not consume any characters."),
