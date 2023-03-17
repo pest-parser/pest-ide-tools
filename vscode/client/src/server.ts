@@ -165,13 +165,17 @@ async function installBinaryViaCargoInstall(): Promise<boolean> {
 		},
 		async (progress, _) => {
 			try {
-				progress.report({ message: "Spawning `cargo install` command" });
+				progress.report({ message: "spawning `cargo install` command" });
 
 				const process = spawn("cargo", ["install", "pest-language-server"], {
 					shell: true,
 				});
 
 				process.stderr.on("data", data =>
+					logCargoInstallProgress(data.toString(), progress)
+				);
+
+				process.stdout.on("data", data =>
 					logCargoInstallProgress(data.toString(), progress)
 				);
 
@@ -184,9 +188,7 @@ async function installBinaryViaCargoInstall(): Promise<boolean> {
 				);
 
 				if (exitCode === 0) {
-					await window.showInformationMessage(
-						"Successfully installed Pest Language Server."
-					);
+					progress.report({ increment: 100, message: "installed" });
 
 					return true;
 				} else {
@@ -213,13 +215,15 @@ function logCargoInstallProgress(
 	let msg;
 	const versionRegex = /v[0-9]+\.[0-9]+\.[0-9]+/;
 
-	if (
+	if (data === "Updating crates.io index") {
+		msg = "updating crates.io index";
+	} else if (
 		data ===
 		"Updating git repository `https://github.com/pest-parser/pest-ide-tools`"
 	) {
 		msg = "fetching crate";
 	} else if (data.startsWith("Compiling")) {
-		msg = `Compiling ${data.split("compiling ")[1].split(versionRegex)[0]}`;
+		msg = `compiling ${data.split("Compiling ")[1].split(versionRegex)[0]}`;
 	}
 
 	if (msg) {

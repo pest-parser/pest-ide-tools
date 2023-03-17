@@ -76,7 +76,7 @@ async function startClientsForFolder(
 		extensionName,
 		{
 			command,
-			args: ["--no-update-check", ...customArgs],
+			args: customArgs,
 		},
 		{
 			documentSelector: [
