@@ -8,6 +8,5 @@
 !language-configuration.json
 !build/client.js
 !build/server.js
-!build/pest_language_server_bg.wasm
 !syntaxes/pest.tmLanguage.json
 !icon.png
