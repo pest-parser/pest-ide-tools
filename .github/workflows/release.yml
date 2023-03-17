@@ -38,7 +38,7 @@ jobs:
 
       - name: Get Changelog
         id: get_changelog
-        run: echo "COMMITS=$(awk -v latest="$(grep -Eo '^## v[0-9]+\.[0-9]+\.[0-9]+$' CHANGELOG.md | head -n1)" '/^## v/ {if (header) exit; header=1} /^## v'${latest}'/{print; next} header && !/^## v/{print}' CHANGELOG.md)" >> $GITHUB_OUTPUT
+        run: echo "COMMITS=\"$(awk -v latest="$(grep -Eo '^## v[0-9]+\.[0-9]+\.[0-9]+$' CHANGELOG.md | head -n1)" '/^## v/ {if (header) exit; header=1} /^## v'${latest}'/{print; next} header && !/^## v/{print}' CHANGELOG.md)\"" >> $GITHUB_OUTPUT
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
