@@ -17,9 +17,6 @@ tasks:
     desc: Package the VSCode extension into a VSIX file.
     dir: vscode
 
-    deps:
-      - rust-build
-
     method: checksum
     sources:
       - client/**/*
