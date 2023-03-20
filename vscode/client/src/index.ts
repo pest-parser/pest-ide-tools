@@ -146,6 +146,12 @@ export async function activate(context: ExtensionContext): Promise<void> {
 						await startClientsForFolder(folder, context);
 					}
 				}
+			} else {
+				for (const client of clients.values()) {
+					client.sendNotification("workspace/didChangeConfiguration", {
+						settings: workspace.getConfiguration("pestIdeTools"),
+					});
+				}
 			}
 		})
 	);

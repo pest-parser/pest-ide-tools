@@ -96,19 +96,17 @@ impl PestLanguageServerImpl {
     }
 
     pub async fn did_change_configuration(&mut self, params: DidChangeConfigurationParams) {
-        self.client
-            .log_message(MessageType::INFO, format!("{:#?}", params))
-            .await;
-        if let Some(config) = params.settings.get("pestIdeTools") {
-            if let Ok(config) = serde_json::from_value(config.clone()) {
-                self.config = config;
-                self.client
-                    .log_message(
-                        MessageType::INFO,
-                        "Updated configuration from client.".to_string(),
-                    )
-                    .await;
-            }
+        if let Ok(config) = serde_json::from_value(params.settings) {
+            self.config = config;
+            self.client
+                .log_message(
+                    MessageType::INFO,
+                    "Updated configuration from client.".to_string(),
+                )
+                .await;
+
+            let diagnostics = self.reload().await;
+            self.send_diagnostics(diagnostics).await;
         }
     }
 
