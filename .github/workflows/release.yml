@@ -41,7 +41,7 @@ jobs:
 
       - name: Publish to crates.io
         working-directory: language-server
-        run: cargo publish --token ${{  }}
+        run: cargo publish --token ${{ secrets.CRATES_TOKEN }}
 
       - name: Get Changelog
         id: get_changelog
