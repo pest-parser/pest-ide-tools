@@ -58,6 +58,7 @@ jobs:
             # Checklist Before Publishing
 
             - [ ] Check VSCode extension was published correctly.
+            - [ ] Check crates.io release was published correctly.
             - [ ] Check artifacts were uploaded to this release.
             - [ ] Update release body.
 
