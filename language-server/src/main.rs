@@ -9,8 +9,9 @@ use lsp::PestLanguageServerImpl;
 use tokio::sync::RwLock;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::{
-    DidChangeConfigurationParams, DidChangeWatchedFilesParams, DocumentFormattingParams,
-    InitializeParams, InitializeResult, InitializedParams, CodeActionParams, CodeActionResponse,
+    CodeActionParams, CodeActionResponse, DidChangeConfigurationParams,
+    DidChangeWatchedFilesParams, DocumentFormattingParams, InitializeParams, InitializeResult,
+    InitializedParams,
 };
 use tower_lsp::{
     lsp_types::{

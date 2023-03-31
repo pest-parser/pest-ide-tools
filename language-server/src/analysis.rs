@@ -57,7 +57,8 @@ impl Analysis {
                         preceding_docs.push(inner.into_inner().next().unwrap().as_str());
                     }
                     Rule::identifier => {
-                        let expression = inner_pairs.find(|r| r.as_rule() == Rule::expression)
+                        let expression = inner_pairs
+                            .find(|r| r.as_rule() == Rule::expression)
                             .expect("rule should contain expression")
                             .as_str()
                             .to_owned();
@@ -107,9 +108,7 @@ impl Analysis {
                     false
                 }
             })
-            .filter(|(name, _) | {
-                !BUILTINS.contains(&name.as_str())
-            })
+            .filter(|(name, _)| !BUILTINS.contains(&name.as_str()))
             .map(|(name, ra)| {
                 (
                     name,
