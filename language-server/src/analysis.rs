@@ -1,4 +1,4 @@
-use pest::iterators::Pairs;
+use pest::{iterators::Pairs, Span};
 use pest_meta::parser::Rule;
 use reqwest::Url;
 use std::collections::HashMap;
@@ -9,49 +9,60 @@ use crate::{
     helpers::{FindOccurrences, IntoLocation},
 };
 
+#[derive(Debug, Clone)]
+/// Stores analysis information for a rule.
+pub struct RuleAnalysis {
+    /// The location of the entire definition of the rule (i.e. `rule = { "hello" }`).
+    pub definition_location: Location,
+    /// The location of the name definition of the rule.
+    pub identifier_location: Location,
+    /// The inner body of the rule (the bit inside the curly braces).
+    pub expression: String,
+    /// The occurrences of the rule, including its definition.
+    pub occurrences: Vec<Location>,
+    /// The rules documentation, in markdown.
+    pub doc: String,
+}
+
 #[derive(Debug)]
 /// Stores analysis information for a document.
 pub struct Analysis {
     /// The URL of the document that this analysis is for.
     pub doc_url: Url,
-    /// Maps rule names to their locations in the document. If the rule is a builtin, the location
-    /// will be [None].
-    pub rule_names: HashMap<String, Option<Location>>,
-    /// Maps rule names to all of their occurrences in the document, including their definition.
-    pub rule_occurrences: HashMap<String, Vec<Location>>,
-    /// Maps rule names to their documentation, in Markdown.
-    pub rule_docs: HashMap<String, String>,
+    /// Holds analyses for individual rules.
+    /// [RuleAnalysis] is [None] for builtins.
+    pub rules: HashMap<String, Option<RuleAnalysis>>,
 }
 
 impl Analysis {
     /// Updates this analysis from the given pairs.
     pub fn update_from(&mut self, pairs: Pairs<Rule>) {
-        self.rule_names = HashMap::new();
-        self.rule_docs = HashMap::new();
-        self.rule_occurrences = HashMap::new();
+        self.rules = HashMap::new();
 
         for builtin in BUILTINS.iter() {
-            self.rule_names.insert(builtin.to_string(), None);
+            self.rules.insert(builtin.to_string(), None);
         }
 
         let mut preceding_docs = Vec::new();
+        let mut current_span: Option<Span>;
 
         for pair in pairs.clone() {
             if pair.as_rule() == Rule::grammar_rule {
-                let inner = pair.into_inner().next().unwrap();
+                current_span = Some(pair.as_span());
+                let mut inner_pairs = pair.into_inner();
+                let inner = inner_pairs.next().unwrap();
+
                 match inner.as_rule() {
                     Rule::line_doc => {
                         preceding_docs.push(inner.into_inner().next().unwrap().as_str());
                     }
                     Rule::identifier => {
-                        self.rule_names.insert(
-                            inner.as_str().to_owned(),
-                            Some(inner.as_span().into_location(&self.doc_url)),
-                        );
-                        self.rule_occurrences.insert(
-                            inner.as_str().to_owned(),
-                            pairs.find_occurrences(&self.doc_url, inner.as_str()),
-                        );
+                        let expression = inner_pairs.find(|r| r.as_rule() == Rule::expression)
+                            .expect("rule should contain expression")
+                            .as_str()
+                            .to_owned();
+                        let occurrences = pairs.find_occurrences(&self.doc_url, inner.as_str());
+                        let mut docs = None;
 
                         if !preceding_docs.is_empty() {
                             let mut buf = String::new();
@@ -63,9 +74,22 @@ impl Analysis {
                                 buf.push_str(preceding_docs.join("\n- ").as_str());
                             }
 
-                            self.rule_docs.insert(inner.as_str().to_owned(), buf);
+                            docs = Some(buf);
                             preceding_docs.clear();
                         }
+
+                        self.rules.insert(
+                            inner.as_str().to_owned(),
+                            Some(RuleAnalysis {
+                                identifier_location: inner.as_span().into_location(&self.doc_url),
+                                definition_location: current_span
+                                    .expect("rule should have a defined span")
+                                    .into_location(&self.doc_url),
+                                expression,
+                                occurrences,
+                                doc: docs.unwrap_or_else(|| "".to_owned()),
+                            }),
+                        );
                     }
                     _ => {}
                 }
@@ -74,14 +98,22 @@ impl Analysis {
     }
 
     pub fn get_unused_rules(&self) -> Vec<(&String, &Location)> {
-        self.rule_occurrences
+        self.rules
             .iter()
-            .filter(|(_, occurrences)| occurrences.len() == 1)
-            .filter(|(name, _)| !BUILTINS.iter().filter(|n| n == name).any(|_| true))
-            .map(|(name, occurrences)| {
+            .filter(|(_, ra)| {
+                if let Some(ra) = ra {
+                    ra.occurrences.len() == 1
+                } else {
+                    false
+                }
+            })
+            .filter(|(name, _) | {
+                !BUILTINS.contains(&name.as_str())
+            })
+            .map(|(name, ra)| {
                 (
                     name,
-                    occurrences.first().unwrap_or_else(|| {
+                    ra.as_ref().unwrap().occurrences.first().unwrap_or_else(|| {
                         panic!("Expected at least one occurrence for rule {}", name)
                     }),
                 )

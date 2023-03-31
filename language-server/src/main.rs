@@ -10,7 +10,7 @@ use tokio::sync::RwLock;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::{
     DidChangeConfigurationParams, DidChangeWatchedFilesParams, DocumentFormattingParams,
-    InitializeParams, InitializeResult, InitializedParams,
+    InitializeParams, InitializeResult, InitializedParams, CodeActionParams, CodeActionResponse,
 };
 use tower_lsp::{
     lsp_types::{
@@ -78,6 +78,10 @@ impl LanguageServer for PestLanguageServer {
 
     async fn did_delete_files(&self, params: DeleteFilesParams) {
         self.0.write().await.did_delete_files(params).await;
+    }
+
+    async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
+        self.0.read().await.code_action(params)
     }
 
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {

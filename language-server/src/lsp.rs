@@ -5,6 +5,7 @@ use tower_lsp::{
     jsonrpc::Result,
     lsp_types::{
         request::{GotoDeclarationParams, GotoDeclarationResponse},
+        CodeAction, CodeActionKind, CodeActionOrCommand, CodeActionParams, CodeActionResponse,
         CompletionItem, CompletionItemKind, CompletionParams, CompletionResponse,
         ConfigurationItem, DeleteFilesParams, Diagnostic, DiagnosticSeverity,
         DidChangeConfigurationParams, DidChangeTextDocumentParams, DidChangeWatchedFilesParams,
@@ -19,7 +20,7 @@ use tower_lsp::{
 };
 
 use crate::{
-    analysis::Analysis,
+    analysis::{Analysis, RuleAnalysis},
     config::Config,
     helpers::{
         create_empty_diagnostics, Diagnostics, Documents, FindWordRange, IntoDiagnostics,
@@ -246,6 +247,81 @@ impl PestLanguageServerImpl {
         }
     }
 
+    pub fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
+        let CodeActionParams {
+            context,
+            range,
+            text_document,
+            ..
+        } = params;
+        let only = context.only;
+        let analysis = self.analyses.get(&text_document.uri);
+        let mut actions = Vec::new();
+
+        if let Some(analysis) = analysis {
+            // Inlining
+            if only
+                .as_ref()
+                .map_or(true, |only| only.contains(&CodeActionKind::REFACTOR_INLINE))
+            {
+                let mut rule_name = None;
+
+                for (name, ra) in analysis.rules.iter() {
+                    if let Some(ra) = ra {
+                        if ra.identifier_location.range == range {
+                            rule_name = Some(name);
+                            break;
+                        }
+                    }
+                }
+
+                if let Some(rule_name) = rule_name {
+                    let ra = self
+                        .get_rule_analysis(&text_document.uri, rule_name)
+                        .expect("should not be called on a builtin with no rule analysis");
+                    let rule_expression = ra.expression.clone();
+
+                    let mut edits = Vec::new();
+
+                    edits.push(TextEdit {
+                        range: ra.definition_location.range,
+                        new_text: "".to_owned(),
+                    });
+
+                    if let Some(occurrences) = self
+                        .get_rule_analysis(&text_document.uri, rule_name)
+                        .map(|ra| &ra.occurrences)
+                    {
+                        for occurrence in occurrences {
+                            if occurrence.range != ra.identifier_location.range {
+                                edits.push(TextEdit {
+                                    range: occurrence.range,
+                                    new_text: rule_expression.clone(),
+                                });
+                            }
+                        }
+                    }
+
+                    let mut changes = HashMap::new();
+                    changes.insert(text_document.uri.clone(), edits);
+
+                    actions.push(CodeActionOrCommand::CodeAction(CodeAction {
+                        title: "Inline rule".to_owned(),
+                        kind: Some(CodeActionKind::REFACTOR_INLINE),
+                        edit: Some(WorkspaceEdit {
+                            changes: Some(changes),
+                            document_changes: None,
+                            change_annotations: None,
+                        }),
+                        ..Default::default()
+                    }));
+                }
+            }
+        }
+
+        Ok(Some(actions))
+    }
+
     pub fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
         let CompletionParams {
             text_document_position,
@@ -267,7 +343,7 @@ impl PestLanguageServerImpl {
         if let Some(analysis) = self.analyses.get(&document.uri) {
             return Ok(Some(CompletionResponse::Array(
                 analysis
-                    .rule_names
+                    .rules
                     .keys()
                     .filter(|i| partial_identifier.is_empty() || i.starts_with(partial_identifier))
                     .map(|i| CompletionItem {
@@ -307,13 +383,13 @@ impl PestLanguageServerImpl {
             }));
         }
 
-        if let Some(doc) = self
+        if let Some(Some(ra)) = self
             .analyses
             .get(&document.uri)
-            .and_then(|a| a.rule_docs.get(identifier))
+            .and_then(|a| a.rules.get(identifier))
         {
             return Ok(Some(Hover {
-                contents: HoverContents::Scalar(MarkedString::String(doc.to_owned())),
+                contents: HoverContents::Scalar(MarkedString::String(ra.doc.clone())),
                 range: Some(range.into_range(text_document_position_params.position.line)),
             }));
         }
@@ -341,12 +417,11 @@ impl PestLanguageServerImpl {
             &line[line.get_word_range_at_idx(text_document_position.position.character as usize)];
         let mut edits = Vec::new();
 
-        if let Some(references) = self
-            .analyses
-            .get(&document.uri)
-            .and_then(|a| a.rule_occurrences.get(old_identifier))
+        if let Some(occurrences) = self
+            .get_rule_analysis(&document.uri, old_identifier)
+            .map(|ra| &ra.occurrences)
         {
-            for location in references {
+            for location in occurrences {
                 edits.push(TextEdit {
                     range: location.range,
                     new_text: new_name.clone(),
@@ -390,10 +465,9 @@ impl PestLanguageServerImpl {
             line.get_word_range_at_idx(text_document_position_params.position.character as usize);
         let identifier = &line[range];
 
-        if let Some(Some(location)) = self
-            .analyses
-            .get(&document.uri)
-            .and_then(|a| a.rule_names.get(identifier))
+        if let Some(location) = self
+            .get_rule_analysis(&document.uri, identifier)
+            .map(|ra| &ra.definition_location)
         {
             return Ok(Some(GotoDeclarationResponse::Scalar(Location {
                 uri: text_document_position_params.text_document.uri,
@@ -426,10 +500,9 @@ impl PestLanguageServerImpl {
             line.get_word_range_at_idx(text_document_position_params.position.character as usize);
         let identifier = &line[range];
 
-        if let Some(Some(location)) = self
-            .analyses
-            .get(&document.uri)
-            .and_then(|a| a.rule_names.get(identifier))
+        if let Some(location) = self
+            .get_rule_analysis(&document.uri, identifier)
+            .map(|ra| &ra.definition_location)
         {
             return Ok(Some(GotoDeclarationResponse::Scalar(Location {
                 uri: text_document_position_params.text_document.uri,
@@ -458,17 +531,9 @@ impl PestLanguageServerImpl {
         let range = line.get_word_range_at_idx(text_document_position.position.character as usize);
         let identifier = &line[range];
 
-        if let Some(analysis) = self.analyses.get(&document.uri) {
-            return Ok(Some(
-                analysis
-                    .rule_occurrences
-                    .get(identifier)
-                    .unwrap_or(&vec![])
-                    .clone(),
-            ));
-        }
-
-        Ok(None)
+        Ok(self
+            .get_rule_analysis(&document.uri, identifier)
+            .map(|ra| ra.occurrences.clone()))
     }
 
     pub fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
@@ -531,9 +596,7 @@ impl PestLanguageServerImpl {
                     .entry(url.clone())
                     .or_insert_with(|| Analysis {
                         doc_url: url.clone(),
-                        rule_names: HashMap::new(),
-                        rule_occurrences: HashMap::new(),
-                        rule_docs: HashMap::new(),
+                        rules: HashMap::new(),
                     })
                     .update_from(pairs);
             } else if let Err(errors) = pairs {
@@ -548,24 +611,29 @@ impl PestLanguageServerImpl {
             }
 
             if let Some(analysis) = self.analyses.get(url) {
+                let mut unused_diagnostics = Vec::new();
                 for (rule_name, rule_location) in
                     analysis.get_unused_rules().iter().filter(|(rule_name, _)| {
                         !self.config.always_used_rule_names.contains(rule_name)
                     })
                 {
+                    unused_diagnostics.push(Diagnostic::new(
+                        rule_location.range,
+                        Some(DiagnosticSeverity::WARNING),
+                        None,
+                        Some("Pest Language Server".to_owned()),
+                        format!("Rule {} is unused", rule_name),
+                        None,
+                        None,
+                    ));
+                }
+
+                if unused_diagnostics.len() > 1 {
                     diagnostics
-                        .entry(url.clone())
+                        .entry(url.to_owned())
                         .or_insert_with(|| create_empty_diagnostics((url, document)).1)
                         .diagnostics
-                        .push(Diagnostic::new(
-                            rule_location.range,
-                            Some(DiagnosticSeverity::WARNING),
-                            None,
-                            Some("Pest Language Server".to_owned()),
-                            format!("Rule {} is unused", rule_name),
-                            None,
-                            None,
-                        ));
+                        .extend(unused_diagnostics);
                 }
             }
         }
@@ -604,5 +672,13 @@ impl PestLanguageServerImpl {
                 .publish_diagnostics(uri.clone(), diagnostics, version)
                 .await;
         }
+    }
+
+    fn get_rule_analysis(&self, uri: &Url, rule_name: &str) -> Option<&RuleAnalysis> {
+        self.analyses
+            .get(&uri)
+            .and_then(|analysis| analysis.rules.get(rule_name))
+            .map(|ra| ra.as_ref())
+            .flatten()
     }
 }
