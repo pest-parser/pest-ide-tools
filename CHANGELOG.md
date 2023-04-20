@@ -4,7 +4,7 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 
-## v0.3.0
+## v0.2.1
 
 - fix(vscode): scan both stdout and stderr of Cargo commands, fixes some issues with installation flow
 - feat(*): documentation, issue templates
