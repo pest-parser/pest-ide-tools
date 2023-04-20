@@ -4,6 +4,16 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 
+## v0.3.0
+
+- fix(vscode): scan both stdout and stderr of Cargo commands, fixes some issues with installation flow
+- feat(*): documentation, issue templates
+- feat(sublime): begin publishing a sublime text package
+- fix(server, vscode): server now hot-reloads config updates more reliably  
+- fix(server, vscode): bump problematic dependencies (love the JS ecosystem...a CVE a day keeps the doctor away)
+- feat(server): add rule inlining code action
+- feat(server): ignore unused rule name analysis if there is only one unused rule (hack fix)
+
 ## v0.2.0
 
 - feat(*): port to tower lsp
