@@ -8,6 +8,7 @@ All notable changes will be documented in this file.
 
 - feat(vscode): allow relative paths in `pestIdeTools.serverPath`
 - fix(vscode): allow `pestIdeTools.serverPath` to be `null` in the schema
+- fix(server): CJK/non-ascii characters no longer crash the server
 - fix(server): add a CJK test case to the manual testing recommendations
 
 ## v0.2.1
