@@ -1,0 +1,5 @@
+// A test for CJK/non-ascii characters characters
+
+root = { inner+ ~ "中文" }
+/// No idea what these characters mean, just random ones.
+inner = { "文" | "中" }

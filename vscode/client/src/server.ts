@@ -8,7 +8,7 @@ import { outputChannel } from ".";
 import { exec, ExecException, spawn } from "child_process";
 import { stat } from "fs/promises";
 import fetch from "node-fetch";
-import { join } from "path";
+import path, { join } from "path";
 import { promisify } from "util";
 import { Progress, ProgressLocation, window, workspace } from "vscode";
 
@@ -70,8 +70,17 @@ async function findServerPath(): Promise<string | undefined> {
 	const config = workspace.getConfiguration("pestIdeTools");
 
 	// Check for custom server path
-	if (config.get("serverPath")) {
-		return config.get("serverPath") as string;
+	if (config.get("serverPath") && workspace.workspaceFolders !== undefined) {
+		outputChannel.appendLine(
+			path.resolve(
+				workspace.workspaceFolders[0].uri.fsPath,
+				config.get("serverPath") as string
+			)
+		);
+		return path.resolve(
+			workspace.workspaceFolders[0].uri.fsPath,
+			config.get("serverPath") as string
+		);
 	}
 
 	const cargoBinDirectory = getCargoBinDirectory();

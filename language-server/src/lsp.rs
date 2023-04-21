@@ -638,6 +638,8 @@ impl PestLanguageServerImpl {
             }
         }
 
+        self.client.log_message(MessageType::INFO, format!("{:#?}", diagnostics)).await;
+
         diagnostics
     }
 

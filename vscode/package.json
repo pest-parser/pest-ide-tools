@@ -63,7 +63,7 @@
 				"title": "Pest IDE Tools",
 				"properties": {
 					"pestIdeTools.serverPath": {
-						"type": "string",
+						"type": ["string", "null"],
 						"description": "Set a custom path to a Pest LS binary.",
 						"scope": "window"
 					},

@@ -4,6 +4,12 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 
+## v0.2.2
+
+- feat(vscode): allow relative paths in `pestIdeTools.serverPath`
+- fix(vscode): allow `pestIdeTools.serverPath` to be `null` in the schema
+- fix(server): add a CJK test case to the manual testing recommendations
+
 ## v0.2.1
 
 - fix(vscode): scan both stdout and stderr of Cargo commands, fixes some issues with installation flow
