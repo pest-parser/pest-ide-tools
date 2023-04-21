@@ -7,7 +7,7 @@ license = "Apache-2.0"
 name = "pest-language-server"
 readme = "../README.md"
 repository = "https://github.com/pest-parser/pest-ide-tools"
-version = "0.2.1"
+version = "0.2.2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

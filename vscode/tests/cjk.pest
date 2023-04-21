@@ -3,4 +3,3 @@
 root = { inner+ ~ "中文" ~ ANY }
 /// No idea what these characters mean, just random ones.
 inner = { "文" | "中" }
->
