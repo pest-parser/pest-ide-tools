@@ -11,6 +11,7 @@ use tower_lsp::lsp_types::{
 };
 
 use pest_meta::parser::{self, Rule};
+use unicode_segmentation::UnicodeSegmentation;
 
 pub type Documents = HashMap<Url, TextDocumentItem>;
 pub type Diagnostics = HashMap<Url, PublishDiagnosticsParams>;
@@ -98,41 +99,49 @@ pub trait FindWordRange {
 
 impl FindWordRange for &str {
     fn get_word_range_at_idx(self, search_idx: usize) -> std::ops::Range<usize> {
-        fn is_identifier(c: &char) -> bool {
+        fn is_identifier(c: char) -> bool {
             !(c.is_whitespace()
-                || *c == '*'
-                || *c == '+'
-                || *c == '?'
-                || *c == '!'
-                || *c == '&'
-                || *c == '~'
-                || *c == '{'
-                || *c == '}'
-                || *c == '['
-                || *c == ']'
-                || *c == '('
-                || *c == ')')
+                || c == '*'
+                || c == '+'
+                || c == '?'
+                || c == '!'
+                || c == '&'
+                || c == '~'
+                || c == '{'
+                || c == '}'
+                || c == '['
+                || c == ']'
+                || c == '('
+                || c == ')')
         }
 
-        let next = self[search_idx..]
-            .chars()
+        let next = str_range(&self, &(search_idx..self.len()))
+            .graphemes(true)
             .enumerate()
-            .find(|(_index, char)| !is_identifier(char))
+            .find(|(_index, char)| !is_identifier(char.chars().next().unwrap_or(' ')))
             .map(|(index, _char)| index)
             .map(|index| search_idx + index)
             .unwrap_or(self.len());
 
-        let preceding = self[0..search_idx]
-            .chars()
+        let preceding = str_range(&self, &(0..search_idx))
+            .graphemes(true)
             .rev()
             .enumerate()
-            .find(|(_index, char)| !is_identifier(char))
+            .find(|(_index, char)| !is_identifier(char.chars().next().unwrap_or(' ')))
             .map(|(index, _char)| index)
             .map(|index| search_idx - index)
             .unwrap_or(0);
 
         preceding..next
     }
+}
+
+/// Returns a string from a range of human characters (graphemes). Respects unicode.
+pub fn str_range(s: &str, range: &std::ops::Range<usize>) -> String {
+    s.graphemes(true)
+        .skip(range.start)
+        .take(range.len())
+        .collect()
 }
 
 pub trait IntoDiagnostics {

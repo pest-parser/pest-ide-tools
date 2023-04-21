@@ -10,5 +10,5 @@ These are manual tests that should be performed to ensure the server is working 
 - Check that the unused rule diagnostic works, with and without the `pestIdeTools.alwaysUsedRuleNames` configuration.
 - Check go to definition and find references works correctly.
 - Check that renaming rules works as expected.
-- Check the CJK characters example works. Attempt to hover over a CJK rule.
+- Check the CJK characters example works. Attempt to hover over a CJK rule to see if the server crashes.
 

@@ -23,8 +23,8 @@ use crate::{
     analysis::{Analysis, RuleAnalysis},
     config::Config,
     helpers::{
-        create_empty_diagnostics, Diagnostics, Documents, FindWordRange, IntoDiagnostics,
-        IntoRangeWithLine,
+        create_empty_diagnostics, str_range, Diagnostics, Documents, FindWordRange,
+        IntoDiagnostics, IntoRangeWithLine,
     },
 };
 use crate::{builtins::get_builtin_description, update_checker::check_for_updates};
@@ -338,7 +338,7 @@ impl PestLanguageServerImpl {
             .nth(text_document_position.position.line as usize)
             .unwrap_or("");
         let range = line.get_word_range_at_idx(text_document_position.position.character as usize);
-        let partial_identifier = &line[range];
+        let partial_identifier = &str_range(line, &range);
 
         if let Some(analysis) = self.analyses.get(&document.uri) {
             return Ok(Some(CompletionResponse::Array(
@@ -374,7 +374,7 @@ impl PestLanguageServerImpl {
             .unwrap_or("");
         let range =
             line.get_word_range_at_idx(text_document_position_params.position.character as usize);
-        let identifier = &line[range.clone()];
+        let identifier = &str_range(line, &range);
 
         if let Some(description) = get_builtin_description(identifier) {
             return Ok(Some(Hover {
@@ -413,8 +413,10 @@ impl PestLanguageServerImpl {
             .lines()
             .nth(text_document_position.position.line as usize)
             .unwrap_or("");
-        let old_identifier =
-            &line[line.get_word_range_at_idx(text_document_position.position.character as usize)];
+        let old_identifier = &str_range(
+            line,
+            &line.get_word_range_at_idx(text_document_position.position.character as usize),
+        );
         let mut edits = Vec::new();
 
         if let Some(occurrences) = self
@@ -463,7 +465,7 @@ impl PestLanguageServerImpl {
 
         let range =
             line.get_word_range_at_idx(text_document_position_params.position.character as usize);
-        let identifier = &line[range];
+        let identifier = &str_range(line, &range);
 
         if let Some(location) = self
             .get_rule_analysis(&document.uri, identifier)
@@ -498,7 +500,7 @@ impl PestLanguageServerImpl {
             .unwrap_or("");
         let range =
             line.get_word_range_at_idx(text_document_position_params.position.character as usize);
-        let identifier = &line[range];
+        let identifier = &str_range(line, &range);
 
         if let Some(location) = self
             .get_rule_analysis(&document.uri, identifier)
@@ -529,7 +531,7 @@ impl PestLanguageServerImpl {
             .nth(text_document_position.position.line as usize)
             .unwrap_or("");
         let range = line.get_word_range_at_idx(text_document_position.position.character as usize);
-        let identifier = &line[range];
+        let identifier = &str_range(line, &range);
 
         Ok(self
             .get_rule_analysis(&document.uri, identifier)
