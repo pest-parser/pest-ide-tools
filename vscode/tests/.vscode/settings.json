@@ -1,3 +1,4 @@
 {
     "pestIdeTools.serverPath": "../../target/debug/pest-language-server",
+    "pestIdeTools.enablePerformanceLogging": true
 }

@@ -83,6 +83,12 @@
 						"description": "Rule names that should not be included in the unused rule names diagnostic.",
 						"default": [],
 						"scope": "window"
+					},
+					"pestIdeTools.enablePerformanceLogging": {
+						"type": "boolean",
+						"description": "Enable logging of performance marks (for developers).",
+						"default": false,
+						"scope": "window"
 					}
 				}
 			}
