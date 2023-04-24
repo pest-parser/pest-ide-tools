@@ -1,8 +1,7 @@
 use proc_macro::TokenStream;
 use quote::ToTokens;
 use syn::{
-    parse,
-    parse_quote,
+    parse, parse_quote,
     visit_mut::{visit_stmt_mut, VisitMut},
     Expr, Item, Stmt,
 };
@@ -16,10 +15,7 @@ pub fn performance_mark(_: TokenStream, item: TokenStream) -> TokenStream {
 
     let start_stmt: Stmt = parse_quote!(let start = std::time::Instant::now(););
 
-    function.block.stmts.insert(
-        0,
-        start_stmt,
-    );
+    function.block.stmts.insert(0, start_stmt);
 
     let function_name = function.sig.ident.to_string();
     let end_stmts: Vec<Stmt> = parse_quote! {
@@ -46,6 +42,7 @@ struct InsertBeforeReturnVisitor(Vec<Stmt>);
 impl InsertBeforeReturnVisitor {
     fn construct_expr(return_stmt: &Stmt, stmts: &Vec<Stmt>) -> Expr {
         let stmts = VecStmt(stmts);
+
         Expr::Await(parse_quote! {
             async {
                 #stmts
@@ -76,12 +73,9 @@ impl VisitMut for InsertBeforeReturnVisitor {
                     _ => {}
                 }
 
-                *return_expr = InsertBeforeReturnVisitor::construct_expr(
-                    &original_stmt,
-                    &self.0,
-                );
+                *return_expr = InsertBeforeReturnVisitor::construct_expr(&original_stmt, &self.0);
             }
-            _ => {},
+            _ => {}
         }
     }
 

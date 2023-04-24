@@ -1,6 +1,7 @@
 use std::{collections::HashMap, str::Split};
 
 use performance_mark_proc_macro::performance_mark;
+use pest_fmt::Formatter;
 use pest_meta::{parser, validator};
 use tower_lsp::{
     jsonrpc::Result,
@@ -55,7 +56,7 @@ impl PestLanguageServerImpl {
         if let Ok(config_items) = config_items {
             if let Some(config) = config_items.into_iter().next() {
                 let res = serde_json::from_value::<Config>(config);
-                
+
                 if let Ok(config) = res {
                     self.config = config;
                     updated_config = true;
@@ -71,7 +72,10 @@ impl PestLanguageServerImpl {
             self.client
                 .log_message(
                     MessageType::ERROR,
-                    format!("Failed to retrieve configuration from client: {:?}", err.unwrap_or("no error reported".to_string())),
+                    format!(
+                        "Failed to retrieve configuration from client: {:?}",
+                        err.unwrap_or("no error reported".to_string())
+                    ),
                 )
                 .await;
         }
@@ -262,7 +266,10 @@ impl PestLanguageServerImpl {
     }
 
     #[performance_mark]
-    pub async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
+    pub async fn code_action(
+        &self,
+        params: CodeActionParams,
+    ) -> Result<Option<CodeActionResponse>> {
         let CodeActionParams {
             context,
             range,
@@ -394,24 +401,22 @@ impl PestLanguageServerImpl {
         let identifier = &str_range(line, &range);
 
         if let Some(description) = get_builtin_description(identifier) {
-            return Ok(Some(Hover {
+            Ok(Some(Hover {
                 contents: HoverContents::Scalar(MarkedString::String(description.to_owned())),
                 range: Some(range.into_range(text_document_position_params.position.line)),
-            }));
-        }
-
-        if let Some(Some(ra)) = self
+            }))
+        } else if let Some(Some(ra)) = self
             .analyses
             .get(&document.uri)
             .and_then(|a| a.rules.get(identifier))
         {
-            return Ok(Some(Hover {
+            Ok(Some(Hover {
                 contents: HoverContents::Scalar(MarkedString::String(ra.doc.clone())),
                 range: Some(range.into_range(text_document_position_params.position.line)),
-            }));
+            }))
+        } else {
+            Ok(None)
         }
-
-        Ok(None)
     }
 
     #[performance_mark]
@@ -490,13 +495,13 @@ impl PestLanguageServerImpl {
             .get_rule_analysis(&document.uri, identifier)
             .map(|ra| &ra.definition_location)
         {
-            return Ok(Some(GotoDeclarationResponse::Scalar(Location {
+            Ok(Some(GotoDeclarationResponse::Scalar(Location {
                 uri: text_document_position_params.text_document.uri,
                 range: location.range,
-            })));
+            })))
+        } else {
+            Ok(None)
         }
-
-        Ok(None)
     }
 
     #[performance_mark]
@@ -526,13 +531,13 @@ impl PestLanguageServerImpl {
             .get_rule_analysis(&document.uri, identifier)
             .map(|ra| &ra.definition_location)
         {
-            return Ok(Some(GotoDeclarationResponse::Scalar(Location {
+            Ok(Some(GotoDeclarationResponse::Scalar(Location {
                 uri: text_document_position_params.text_document.uri,
                 range: location.range,
-            })));
+            })))
+        } else {
+            Ok(None)
         }
-
-        Ok(None)
     }
 
     #[performance_mark]
@@ -560,13 +565,17 @@ impl PestLanguageServerImpl {
     }
 
     #[performance_mark]
-    pub async fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
+    pub async fn formatting(
+        &self,
+        params: DocumentFormattingParams,
+    ) -> Result<Option<Vec<TextEdit>>> {
         let DocumentFormattingParams { text_document, .. } = params;
 
         let document = self.documents.get(&text_document.uri).unwrap();
         let input = document.text.as_str();
 
-        let fmt = pest_fmt::Formatter::new(input);
+        let fmt = Formatter::new(input);
+
         if let Ok(formatted) = fmt.format() {
             let lines = document.text.lines();
             let last_line = lines.clone().last().unwrap_or("");
@@ -574,10 +583,11 @@ impl PestLanguageServerImpl {
                 Position::new(0, 0),
                 Position::new(lines.count() as u32, last_line.len() as u32),
             );
-            return Ok(Some(vec![TextEdit::new(range, formatted)]));
-        }
 
-        Ok(None)
+            Ok(Some(vec![TextEdit::new(range, formatted)]))
+        } else {
+            Ok(None)
+        }
     }
 }
 
@@ -701,9 +711,8 @@ impl PestLanguageServerImpl {
 
     fn get_rule_analysis(&self, uri: &Url, rule_name: &str) -> Option<&RuleAnalysis> {
         self.analyses
-            .get(&uri)
+            .get(uri)
             .and_then(|analysis| analysis.rules.get(rule_name))
-            .map(|ra| ra.as_ref())
-            .flatten()
+            .and_then(|ra| ra.as_ref())
     }
 }
