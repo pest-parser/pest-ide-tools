@@ -1,0 +1,5 @@
+[hooks]
+pre-commit = "cargo fmt --all --check && cargo clippy"
+
+[logging]
+verbose = true

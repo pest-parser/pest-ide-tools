@@ -10,7 +10,10 @@ use tower_lsp::lsp_types::{
     TextDocumentItem, Url,
 };
 
-use pest_meta::{parser::{self, Rule}, validator};
+use pest_meta::{
+    parser::{self, Rule},
+    validator,
+};
 use unicode_segmentation::UnicodeSegmentation;
 
 pub type Documents = HashMap<Url, TextDocumentItem>;

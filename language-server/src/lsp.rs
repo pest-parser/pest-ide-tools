@@ -23,8 +23,8 @@ use crate::{
     analysis::{Analysis, RuleAnalysis},
     config::Config,
     helpers::{
-        create_empty_diagnostics, str_range, Diagnostics, Documents, FindWordRange,
-        IntoDiagnostics, IntoRangeWithLine, validate_pairs,
+        create_empty_diagnostics, str_range, validate_pairs, Diagnostics, Documents, FindWordRange,
+        IntoDiagnostics, IntoRangeWithLine,
     },
 };
 use crate::{builtins::get_builtin_description, update_checker::check_for_updates};
@@ -678,9 +678,8 @@ impl PestLanguageServerImpl {
 
     fn get_rule_analysis(&self, uri: &Url, rule_name: &str) -> Option<&RuleAnalysis> {
         self.analyses
-            .get(&uri)
+            .get(uri)
             .and_then(|analysis| analysis.rules.get(rule_name))
-            .map(|ra| ra.as_ref())
-            .flatten()
+            .and_then(|ra| ra.as_ref())
     }
 }
