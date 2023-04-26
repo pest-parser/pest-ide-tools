@@ -118,7 +118,7 @@ impl FindWordRange for &str {
                 || c == ')')
         }
 
-        let next = str_range(&self, &(search_idx..self.len()))
+        let next = str_range(self, &(search_idx..self.len()))
             .graphemes(true)
             .enumerate()
             .find(|(_index, char)| !is_identifier(char.chars().next().unwrap_or(' ')))
@@ -126,7 +126,7 @@ impl FindWordRange for &str {
             .map(|index| search_idx + index)
             .unwrap_or(self.len());
 
-        let preceding = str_range(&self, &(0..search_idx))
+        let preceding = str_range(self, &(0..search_idx))
             .graphemes(true)
             .rev()
             .enumerate()
