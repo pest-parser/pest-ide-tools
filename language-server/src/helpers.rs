@@ -210,7 +210,7 @@ impl IntoDiagnostics for Vec<pest::error::Error<Rule>> {
     }
 }
 
-pub fn validate_pairs<'a>(pairs: Pairs<'a, Rule>) -> Result<(), Vec<pest::error::Error<Rule>>> {
+pub fn validate_pairs(pairs: Pairs<'_, Rule>) -> Result<(), Vec<pest::error::Error<Rule>>> {
     validator::validate_pairs(pairs.clone())?;
     // This calls validator::validate_ast under the hood
     parser::consume_rules(pairs)?;
