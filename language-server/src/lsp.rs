@@ -1,6 +1,6 @@
 use std::{collections::HashMap, str::Split};
 
-use pest_meta::{parser, validator};
+use pest_meta::parser;
 use tower_lsp::{
     jsonrpc::Result,
     lsp_types::{
@@ -24,7 +24,7 @@ use crate::{
     config::Config,
     helpers::{
         create_empty_diagnostics, str_range, Diagnostics, Documents, FindWordRange,
-        IntoDiagnostics, IntoRangeWithLine,
+        IntoDiagnostics, IntoRangeWithLine, validate_pairs,
     },
 };
 use crate::{builtins::get_builtin_description, update_checker::check_for_updates};
@@ -580,7 +580,7 @@ impl PestLanguageServerImpl {
             };
 
             if let Ok(pairs) = pairs {
-                if let Err(errors) = validator::validate_pairs(pairs.clone()) {
+                if let Err(errors) = validate_pairs(pairs.clone()) {
                     diagnostics.insert(
                         url.clone(),
                         PublishDiagnosticsParams::new(
