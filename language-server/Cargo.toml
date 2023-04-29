@@ -1,6 +1,6 @@
 [package]
 name = "pest-language-server"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Jamalam <james@jamalam.tech>"]
 description = "A language server for Pest."
 edition = "2021"

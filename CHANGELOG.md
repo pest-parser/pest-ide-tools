@@ -4,6 +4,10 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 
+## v0.3.1
+
+- revert(server): revert performance marks temporarily, while they are refactored into a more generic crate
+
 ## v0.3.0
 
 - feat(server): add performance marks for debugging
