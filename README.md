@@ -37,6 +37,8 @@ file.
 - [Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=pest.pest-ide-tools)
   - VSCode has a pre-built extension that can compile, update, and start up the
     language server. It also includes syntax highlighting definitions.
+- Sublime Text
+  - Sublime Text packages can be obtained from [the latest release](https://github.com/pest-parser/pest-ide-tools/releases/latest)
 
 Due to the usage of the LSP by this project, adding support for new IDEs should
 be far more achievable than a custom implementation for each editor. Please see
