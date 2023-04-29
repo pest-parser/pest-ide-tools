@@ -1,5 +1,5 @@
 [hooks]
-pre-commit = "cargo fmt --all --check && cargo clippy"
+pre-commit = "task fmt-and-lint"
 
 [logging]
 verbose = true
