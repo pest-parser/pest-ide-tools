@@ -10,7 +10,10 @@ use tower_lsp::lsp_types::{
     TextDocumentItem, Url,
 };
 
-use pest_meta::parser::{self, Rule};
+use pest_meta::{
+    parser::{self, Rule},
+    validator,
+};
 use unicode_segmentation::UnicodeSegmentation;
 
 pub type Documents = HashMap<Url, TextDocumentItem>;
@@ -205,4 +208,11 @@ impl IntoDiagnostics for Vec<pest::error::Error<Rule>> {
             })
             .collect()
     }
+}
+
+pub fn validate_pairs(pairs: Pairs<'_, Rule>) -> Result<(), Vec<pest::error::Error<Rule>>> {
+    validator::validate_pairs(pairs.clone())?;
+    // This calls validator::validate_ast under the hood
+    parser::consume_rules(pairs)?;
+    Ok(())
 }

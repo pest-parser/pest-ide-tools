@@ -2,7 +2,7 @@ use std::{collections::HashMap, str::Split};
 
 use performance_mark_proc_macro::performance_mark;
 use pest_fmt::Formatter;
-use pest_meta::{parser, validator};
+use pest_meta::parser;
 use tower_lsp::{
     jsonrpc::Result,
     lsp_types::{
@@ -25,7 +25,7 @@ use crate::{
     analysis::{Analysis, RuleAnalysis},
     config::Config,
     helpers::{
-        create_empty_diagnostics, str_range, Diagnostics, Documents, FindWordRange,
+        create_empty_diagnostics, str_range, validate_pairs, Diagnostics, Documents, FindWordRange,
         IntoDiagnostics, IntoRangeWithLine,
     },
 };
@@ -613,7 +613,7 @@ impl PestLanguageServerImpl {
             };
 
             if let Ok(pairs) = pairs {
-                if let Err(errors) = validator::validate_pairs(pairs.clone()) {
+                if let Err(errors) = validate_pairs(pairs.clone()) {
                     diagnostics.insert(
                         url.clone(),
                         PublishDiagnosticsParams::new(
