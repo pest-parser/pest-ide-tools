@@ -1,7 +1,7 @@
 use std::{collections::HashMap, str::Split};
 
-use performance_mark_proc_macro::performance_mark;
 use pest_fmt::Formatter;
+use pest_language_server_performance_mark_proc_macro::performance_mark;
 use pest_meta::parser;
 use tower_lsp::{
     jsonrpc::Result,

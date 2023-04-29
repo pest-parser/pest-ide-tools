@@ -16,7 +16,7 @@ repository = "https://github.com/pest-parser/pest-ide-tools"
 pest = "2.5"
 pest_fmt = "0.2"
 pest_meta = "2.5"
-performance-mark-proc-macro = { path = "../performance-mark-proc-macro" }
+pest-language-server-performance-mark-proc-macro = { path = "../pest-language-server-performance-mark-proc-macro" }
 reqwest = { version = "0.11", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

@@ -1,6 +1,6 @@
 [package]
-name = "performance-mark-proc-macro"
-version = "0.0.0+UNVERSIONED"
+name = "pest-language-server-performance-mark-proc-macro"
+version = "0.1.0"
 description = "A proc macro used internally by Pest."
 authors = ["Jamalam <james@jamalam.tech>"]
 edition = "2021"
