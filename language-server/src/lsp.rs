@@ -1,7 +1,5 @@
 use std::{collections::HashMap, str::Split};
 
-use performance_mark_proc_macro::performance_mark;
-use pest_fmt::Formatter;
 use pest_meta::parser;
 use tower_lsp::{
     jsonrpc::Result,
@@ -42,7 +40,6 @@ pub struct PestLanguageServerImpl {
 }
 
 impl PestLanguageServerImpl {
-    #[performance_mark]
     pub async fn initialized(&mut self, _: InitializedParams) {
         let config_items = self
             .client
@@ -53,20 +50,13 @@ impl PestLanguageServerImpl {
             .await;
 
         let mut updated_config = false;
-        let mut err = None;
 
         if let Ok(config_items) = config_items {
             if let Some(config) = config_items.into_iter().next() {
-                let res = serde_json::from_value::<Config>(config);
-
-                if let Ok(config) = res {
+                if let Ok(config) = serde_json::from_value(config) {
                     self.config = config;
                     updated_config = true;
-                } else if let Err(e) = res {
-                    err = Some(e.to_string());
                 }
-            } else {
-                err = Some("No config items returned".to_string());
             }
         }
 
@@ -74,10 +64,7 @@ impl PestLanguageServerImpl {
             self.client
                 .log_message(
                     MessageType::ERROR,
-                    format!(
-                        "Failed to retrieve configuration from client: {:?}",
-                        err.unwrap_or("no error reported".to_string())
-                    ),
+                    "Failed to retrieve configuration from client.",
                 )
                 .await;
         }
@@ -111,7 +98,6 @@ impl PestLanguageServerImpl {
         Ok(())
     }
 
-    #[performance_mark]
     pub async fn did_change_configuration(&mut self, params: DidChangeConfigurationParams) {
         if let Ok(config) = serde_json::from_value(params.settings) {
             self.config = config;
@@ -127,7 +113,6 @@ impl PestLanguageServerImpl {
         }
     }
 
-    #[performance_mark]
     pub async fn did_open(&mut self, params: DidOpenTextDocumentParams) {
         let DidOpenTextDocumentParams { text_document } = params;
         self.client
@@ -147,7 +132,6 @@ impl PestLanguageServerImpl {
         self.send_diagnostics(diagnostics).await;
     }
 
-    #[performance_mark]
     pub async fn did_change(&mut self, params: DidChangeTextDocumentParams) {
         let DidChangeTextDocumentParams {
             text_document,
@@ -175,7 +159,6 @@ impl PestLanguageServerImpl {
         self.send_diagnostics(diagnostics).await;
     }
 
-    #[performance_mark]
     pub async fn did_change_watched_files(&mut self, params: DidChangeWatchedFilesParams) {
         let DidChangeWatchedFilesParams { changes } = params;
         let uris: Vec<_> = changes
@@ -220,7 +203,6 @@ impl PestLanguageServerImpl {
         self.send_diagnostics(diagnostics).await;
     }
 
-    #[performance_mark]
     pub async fn did_delete_files(&mut self, params: DeleteFilesParams) {
         let DeleteFilesParams { files } = params;
         let mut uris = vec![];
@@ -267,11 +249,7 @@ impl PestLanguageServerImpl {
         }
     }
 
-    #[performance_mark]
-    pub async fn code_action(
-        &self,
-        params: CodeActionParams,
-    ) -> Result<Option<CodeActionResponse>> {
+    pub fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
         let CodeActionParams {
             context,
             range,
@@ -498,8 +476,7 @@ impl PestLanguageServerImpl {
         Ok(Some(actions))
     }
 
-    #[performance_mark]
-    pub async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
+    pub fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
         let CompletionParams {
             text_document_position,
             ..
@@ -535,8 +512,7 @@ impl PestLanguageServerImpl {
         Ok(None)
     }
 
-    #[performance_mark]
-    pub async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
+    pub fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
         let HoverParams {
             text_document_position_params,
             ..
@@ -555,26 +531,27 @@ impl PestLanguageServerImpl {
         let identifier = &str_range(line, &range);
 
         if let Some(description) = get_builtin_description(identifier) {
-            Ok(Some(Hover {
+            return Ok(Some(Hover {
                 contents: HoverContents::Scalar(MarkedString::String(description.to_owned())),
                 range: Some(range.into_range(text_document_position_params.position.line)),
-            }))
-        } else if let Some(Some(ra)) = self
+            }));
+        }
+
+        if let Some(Some(ra)) = self
             .analyses
             .get(&document.uri)
             .and_then(|a| a.rules.get(identifier))
         {
-            Ok(Some(Hover {
+            return Ok(Some(Hover {
                 contents: HoverContents::Scalar(MarkedString::String(ra.doc.clone())),
                 range: Some(range.into_range(text_document_position_params.position.line)),
-            }))
-        } else {
-            Ok(None)
+            }));
         }
+
+        Ok(None)
     }
 
-    #[performance_mark]
-    pub async fn rename(&self, params: RenameParams) -> Result<Option<WorkspaceEdit>> {
+    pub fn rename(&self, params: RenameParams) -> Result<Option<WorkspaceEdit>> {
         let RenameParams {
             text_document_position,
             new_name,
@@ -621,8 +598,7 @@ impl PestLanguageServerImpl {
         }))
     }
 
-    #[performance_mark]
-    pub async fn goto_declaration(
+    pub fn goto_declaration(
         &self,
         params: GotoDeclarationParams,
     ) -> Result<Option<GotoDeclarationResponse>> {
@@ -649,17 +625,16 @@ impl PestLanguageServerImpl {
             .get_rule_analysis(&document.uri, identifier)
             .map(|ra| &ra.definition_location)
         {
-            Ok(Some(GotoDeclarationResponse::Scalar(Location {
+            return Ok(Some(GotoDeclarationResponse::Scalar(Location {
                 uri: text_document_position_params.text_document.uri,
                 range: location.range,
-            })))
-        } else {
-            Ok(None)
+            })));
         }
+
+        Ok(None)
     }
 
-    #[performance_mark]
-    pub async fn goto_definition(
+    pub fn goto_definition(
         &self,
         params: GotoDefinitionParams,
     ) -> Result<Option<GotoDefinitionResponse>> {
@@ -685,17 +660,16 @@ impl PestLanguageServerImpl {
             .get_rule_analysis(&document.uri, identifier)
             .map(|ra| &ra.definition_location)
         {
-            Ok(Some(GotoDeclarationResponse::Scalar(Location {
+            return Ok(Some(GotoDeclarationResponse::Scalar(Location {
                 uri: text_document_position_params.text_document.uri,
                 range: location.range,
-            })))
-        } else {
-            Ok(None)
+            })));
         }
+
+        Ok(None)
     }
 
-    #[performance_mark]
-    pub async fn references(&self, params: ReferenceParams) -> Result<Option<Vec<Location>>> {
+    pub fn references(&self, params: ReferenceParams) -> Result<Option<Vec<Location>>> {
         let ReferenceParams {
             text_document_position,
             ..
@@ -718,18 +692,13 @@ impl PestLanguageServerImpl {
             .map(|ra| ra.occurrences.clone()))
     }
 
-    #[performance_mark]
-    pub async fn formatting(
-        &self,
-        params: DocumentFormattingParams,
-    ) -> Result<Option<Vec<TextEdit>>> {
+    pub fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
         let DocumentFormattingParams { text_document, .. } = params;
 
         let document = self.documents.get(&text_document.uri).unwrap();
         let input = document.text.as_str();
 
-        let fmt = Formatter::new(input);
-
+        let fmt = pest_fmt::Formatter::new(input);
         if let Ok(formatted) = fmt.format() {
             let lines = document.text.lines();
             let last_line = lines.clone().last().unwrap_or("");
@@ -737,16 +706,14 @@ impl PestLanguageServerImpl {
                 Position::new(0, 0),
                 Position::new(lines.count() as u32, last_line.len() as u32),
             );
-
-            Ok(Some(vec![TextEdit::new(range, formatted)]))
-        } else {
-            Ok(None)
+            return Ok(Some(vec![TextEdit::new(range, formatted)]));
         }
+
+        Ok(None)
     }
 }
 
 impl PestLanguageServerImpl {
-    #[performance_mark]
     async fn reload(&mut self) -> Diagnostics {
         self.client
             .log_message(MessageType::INFO, "Reloading all diagnostics".to_string())

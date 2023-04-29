@@ -82,41 +82,41 @@ impl LanguageServer for PestLanguageServer {
     }
 
     async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
-        self.0.read().await.code_action(params).await
+        self.0.read().await.code_action(params)
     }
 
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
-        self.0.read().await.completion(params).await
+        self.0.read().await.completion(params)
     }
 
     async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
-        self.0.read().await.hover(params).await
+        self.0.read().await.hover(params)
     }
 
     async fn rename(&self, params: RenameParams) -> Result<Option<WorkspaceEdit>> {
-        self.0.read().await.rename(params).await
+        self.0.read().await.rename(params)
     }
 
     async fn goto_declaration(
         &self,
         params: GotoDeclarationParams,
     ) -> Result<Option<GotoDeclarationResponse>> {
-        self.0.read().await.goto_declaration(params).await
+        self.0.read().await.goto_declaration(params)
     }
 
     async fn goto_definition(
         &self,
         params: GotoDefinitionParams,
     ) -> Result<Option<GotoDefinitionResponse>> {
-        self.0.read().await.goto_definition(params).await
+        self.0.read().await.goto_definition(params)
     }
 
     async fn references(&self, params: ReferenceParams) -> Result<Option<Vec<Location>>> {
-        self.0.read().await.references(params).await
+        self.0.read().await.references(params)
     }
 
     async fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
-        self.0.read().await.formatting(params).await
+        self.0.read().await.formatting(params)
     }
 }
 

@@ -22,9 +22,7 @@ The available options for all editors are:
   "pestIdeTools.alwaysUsedRuleNames": [
     "rule_one",
     "rule_two"
-  ],
-  // Enables logging of performance marks (for developers)
-  "pestIdeTools.enablePerformanceLogging": false
+  ]
 }
 ```
 

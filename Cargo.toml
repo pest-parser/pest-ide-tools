@@ -1,5 +1,4 @@
 [workspace]
 members = [
   "language-server",
-  "performance-mark-proc-macro"
 ]
