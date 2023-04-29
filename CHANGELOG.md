@@ -4,9 +4,17 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 
+## v0.3.2
+
+- fix(vscode): update checker is now enabled by default, and some of its logic
+  has been modified and fixed. It also supports cancellation of the install task
+- fix(vscode): give defaults to all config options
+- fix(server): fix crash with code actions
+
 ## v0.3.1
 
-- revert(server): revert performance marks temporarily, while they are refactored into a more generic crate
+- revert(server): revert performance marks temporarily, while they are
+  refactored into a more generic crate
 
 ## v0.3.0
 
@@ -23,24 +31,28 @@ All notable changes will be documented in this file.
 
 ## v0.2.1
 
-- fix(vscode): scan both stdout and stderr of Cargo commands, fixes some issues with installation flow
+- fix(vscode): scan both stdout and stderr of Cargo commands, fixes some issues
+  with installation flow
 - feat(*): documentation, issue templates
 - feat(sublime): begin publishing a sublime text package
-- fix(server, vscode): server now hot-reloads config updates more reliably  
-- fix(server, vscode): bump problematic dependencies (love the JS ecosystem...a CVE a day keeps the doctor away)
+- fix(server, vscode): server now hot-reloads config updates more reliably
+- fix(server, vscode): bump problematic dependencies (love the JS ecosystem...a
+  CVE a day keeps the doctor away)
 - feat(server): add rule inlining code action
-- feat(server): ignore unused rule name analysis if there is only one unused rule (hack fix)
+- feat(server): ignore unused rule name analysis if there is only one unused
+  rule (hack fix)
 
 ## v0.2.0
 
 - feat(*): port to tower lsp
-    - This will allow the usage of this LS by other IDEs.
-    - The vscode extension will prompt you to download the server.
-    - Other IDEs will have to have the LS installed via `cargo install`.
+  - This will allow the usage of this LS by other IDEs.
+  - The vscode extension will prompt you to download the server.
+  - Other IDEs will have to have the LS installed via `cargo install`.
 - feat(*): add configuration options
 - feat(server, #6): diagnostic for unused rules
 - feat(server, #7): show rule docs (`///`) on hover
-- fix(server, #8): solve issue relating to 0 vs 1 indexing causing diagnostics to occur at the wrong locations
+- fix(server, #8): solve issue relating to 0 vs 1 indexing causing diagnostics
+  to occur at the wrong locations
 - feat(server): add a version checker
 - feat(readme, #2): update readme and add demo gif
 - feat(ci, #4): automatically populate changelog
@@ -48,7 +60,8 @@ All notable changes will be documented in this file.
 
 ## v0.1.2
 
-- feat: upgrade pest v2.5.6, pest-fmt v0.2.3. See [Release Notes](https://github.com/pest-parser/pest/releases/tag/v2.5.6).
+- feat: upgrade pest v2.5.6, pest-fmt v0.2.3. See
+  [Release Notes](https://github.com/pest-parser/pest/releases/tag/v2.5.6).
 - fix(server): solve issue relating to 0 vs 1 indexing.
 - feat(server): suggest user-defined rule names in intellisense.
 

@@ -7,7 +7,7 @@
 import { outputChannel } from ".";
 import { exec, ExecException, spawn } from "child_process";
 import { stat } from "fs/promises";
-import fetch from "node-fetch";
+import fetch, { AbortError } from "node-fetch";
 import path, { join } from "path";
 import { promisify } from "util";
 import { Progress, ProgressLocation, window, workspace } from "vscode";
@@ -24,20 +24,35 @@ export async function findServer(): Promise<string | undefined> {
 	const config = workspace.getConfiguration("pestIdeTools");
 	const updateCheckerEnabled = config.get("checkForUpdates") as boolean;
 
-	const { stdout: currentVersion } = await promisify(exec)(`${path} --version`);
-	outputChannel.appendLine(`[TS] Server version: v${currentVersion.trimEnd()}`);
+	const currentVersion = await promisify(exec)(`${path} --version`).then(s =>
+		s.stdout.trim()
+	);
+	outputChannel.appendLine(`[TS] Server version: v${currentVersion}`);
 
-	if (updateCheckerEnabled) {
+	if (updateCheckerEnabled && config.get("serverPath") === null) {
+		outputChannel.appendLine("[TS] Checking for updates...");
+
 		try {
 			const abortController = new AbortController();
-			const timeout = setTimeout(() => abortController.abort(), 2000);
-			const res = await fetch(
-				"https://crates.io/api/v1/crates/pest-language-server",
-				{ signal: abortController.signal }
-			).then(res => {
+			const timeout = setTimeout(() => abortController.abort(), 2500);
+			let res;
+
+			try {
+				res = await fetch(
+					"https://crates.io/api/v1/crates/pest-language-server",
+					{ signal: abortController.signal }
+				);
+				res = await res.json();
+			} catch (e) {
+				if (e instanceof AbortError) {
+					outputChannel.appendLine("[TS] Update check timed out after 2000ms.");
+					return path;
+				} else {
+					throw e;
+				}
+			} finally {
 				clearTimeout(timeout);
-				return res.json();
-			});
+			}
 
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
@@ -45,7 +60,7 @@ export async function findServer(): Promise<string | undefined> {
 
 			if (currentVersion !== latestVersion) {
 				const choice = await window.showInformationMessage(
-					`A new version of the Pest Language Server is available (v${currentVersion} -> v${latestVersion}). Would you like to update automatically?`,
+					`A new version of the Pest Language Server is available (v${currentVersion} --> v${latestVersion}). Would you like to update automatically?`,
 					{},
 					"Yes"
 				);
@@ -169,15 +184,19 @@ async function installBinaryViaCargoInstall(): Promise<boolean> {
 	return await window.withProgress(
 		{
 			location: ProgressLocation.Notification,
-			cancellable: false,
+			cancellable: true,
 			title: "Installing Pest Language Server",
 		},
-		async (progress, _) => {
+		async (progress, token) => {
 			try {
 				progress.report({ message: "spawning `cargo install` command" });
 
 				const process = spawn("cargo", ["install", "pest-language-server"], {
 					shell: true,
+				});
+
+				token.onCancellationRequested(() => {
+					process.kill();
 				});
 
 				process.stderr.on("data", data =>

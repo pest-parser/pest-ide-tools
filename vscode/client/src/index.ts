@@ -149,7 +149,10 @@ export async function activate(context: ExtensionContext): Promise<void> {
 			} else {
 				for (const client of clients.values()) {
 					client.sendNotification("workspace/didChangeConfiguration", {
-						settings: workspace.getConfiguration("pestIdeTools"),
+						settings: {
+							...workspace.getConfiguration("pestIdeTools"),
+							checkForUpdates: false,
+						},
 					});
 				}
 			}

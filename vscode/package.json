@@ -15,7 +15,7 @@
 		"Formatters",
 		"Programming Languages"
 	],
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/pest-parser/pest-ide-tools"
@@ -67,18 +67,20 @@
 							"string",
 							"null"
 						],
+						"default": null,
 						"description": "Set a custom path to a Pest LS binary.",
 						"scope": "window"
 					},
 					"pestIdeTools.customArgs": {
 						"type": "array",
 						"description": "Additional arguments that should be passed to the Pest LS binary.",
+						"default": [],
 						"scope": "window"
 					},
 					"pestIdeTools.checkForUpdates": {
 						"type": "boolean",
 						"description": "Check for updates to the Pest LS binary.",
-						"default": false,
+						"default": true,
 						"scope": "window"
 					},
 					"pestIdeTools.alwaysUsedRuleNames": {
