@@ -4,6 +4,12 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 
+## v0.3.0
+
+- feat(server): add performance marks for debugging
+- feat(server): simple rule extraction support
+- fix(server): validate AST to catch errors like non-progressing expressions
+
 ## v0.2.2
 
 - feat(vscode): allow relative paths in `pestIdeTools.serverPath`

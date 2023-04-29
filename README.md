@@ -17,7 +17,9 @@ Rust, for the Pest parser generator.
 - Rename rules.
 - Go to rule declaration, definition, or references.
 - Hover information for built-in rules and documented rules.
-- Autocompletion of defined rule names.
+- Autocompletion of rule names.
+- Inline and extract rules.
+- Full-unicode support.
 - Formatting.
 - Update checking.
 
