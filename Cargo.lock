@@ -733,6 +733,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "478c572c3d73181ff3c2539045f6eb99e5491218eae919370993b890cdbdd98e"
 
 [[package]]
+name = "performance-mark-proc-macro"
+version = "0.0.0+UNVERSIONED"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.15",
+]
+
+[[package]]
 name = "pest"
 version = "2.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -746,6 +755,7 @@ dependencies = [
 name = "pest-language-server"
 version = "0.2.2"
 dependencies = [
+ "performance-mark-proc-macro",
  "pest",
  "pest_fmt",
  "pest_meta",
