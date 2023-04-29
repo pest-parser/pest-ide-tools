@@ -16,7 +16,9 @@ pub struct RuleAnalysis {
     pub definition_location: Location,
     /// The location of the name definition of the rule.
     pub identifier_location: Location,
-    /// The inner body of the rule (the bit inside the curly braces).
+    /// The tokens that make up the rule.
+    pub tokens: Vec<(String, Location)>,
+    /// The rules expression, in [String] form.
     pub expression: String,
     /// The occurrences of the rule, including its definition.
     pub occurrences: Vec<Location>,
@@ -57,11 +59,19 @@ impl Analysis {
                         preceding_docs.push(inner.into_inner().next().unwrap().as_str());
                     }
                     Rule::identifier => {
-                        let expression = inner_pairs
+                        let expression_pair = inner_pairs
                             .find(|r| r.as_rule() == Rule::expression)
-                            .expect("rule should contain expression")
-                            .as_str()
-                            .to_owned();
+                            .expect("rule should contain expression");
+                        let expression = expression_pair.as_str().to_owned();
+                        let expressions = expression_pair
+                            .into_inner()
+                            .map(|e| {
+                                (
+                                    e.as_str().to_owned(),
+                                    e.as_span().into_location(&self.doc_url),
+                                )
+                            })
+                            .collect();
                         let occurrences = pairs.find_occurrences(&self.doc_url, inner.as_str());
                         let mut docs = None;
 
@@ -86,6 +96,7 @@ impl Analysis {
                                 definition_location: current_span
                                     .expect("rule should have a defined span")
                                     .into_location(&self.doc_url),
+                                tokens: expressions,
                                 expression,
                                 occurrences,
                                 doc: docs.unwrap_or_else(|| "".to_owned()),

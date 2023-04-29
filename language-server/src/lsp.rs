@@ -20,13 +20,15 @@ use tower_lsp::{
     },
     Client,
 };
+use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
     analysis::{Analysis, RuleAnalysis},
+    builtins::BUILTINS,
     config::Config,
     helpers::{
-        create_empty_diagnostics, str_range, validate_pairs, Diagnostics, Documents, FindWordRange,
-        IntoDiagnostics, IntoRangeWithLine,
+        create_empty_diagnostics, range_contains, str_range, validate_pairs, Diagnostics,
+        Documents, FindWordRange, IntoDiagnostics, IntoRangeWithLine,
     },
 };
 use crate::{builtins::get_builtin_description, update_checker::check_for_updates};
@@ -337,6 +339,158 @@ impl PestLanguageServerImpl {
                         }),
                         ..Default::default()
                     }));
+                }
+            }
+
+            if only.as_ref().map_or(true, |only| {
+                only.contains(&CodeActionKind::REFACTOR_EXTRACT)
+            }) && range.start.line == range.end.line
+            {
+                let document = self.documents.get(&text_document.uri).unwrap();
+                let mut lines = document.text.lines();
+                let line = lines.nth(range.start.line as usize).unwrap_or("");
+
+                let mut rule_name_start_idx = 0;
+                let mut chars = line.graphemes(true);
+
+                while chars.next() == Some(" ") {
+                    rule_name_start_idx += 1;
+                }
+
+                let name_range = line.get_word_range_at_idx(rule_name_start_idx);
+                let rule_name = &str_range(line, &name_range);
+
+                let ra = self
+                    .get_rule_analysis(&text_document.uri, rule_name)
+                    .expect("should not be called on a builtin with no rule analysis");
+
+                let mut selected_token = None;
+
+                for (token, location) in ra.tokens.iter() {
+                    if range_contains(&location.range, &range) {
+                        selected_token = Some((token, location));
+                        break;
+                    }
+                }
+
+                if let Some((extracted_token, location)) = selected_token {
+                    //TODO: Replace with something more robust, it's horrible
+                    let extracted_token_identifier =
+                        match parser::parse(parser::Rule::node, extracted_token) {
+                            Ok(mut node) => {
+                                let mut next = node.next().unwrap();
+
+                                loop {
+                                    match next.as_rule() {
+                                        parser::Rule::terminal => {
+                                            break next
+                                                .into_inner()
+                                                .find(|r| r.as_rule() == parser::Rule::identifier);
+                                        }
+                                        parser::Rule::identifier => {
+                                            break Some(next);
+                                        }
+                                        parser::Rule::string => {
+                                            break Some(next);
+                                        }
+                                        parser::Rule::opening_paren => {
+                                            node = node.next().unwrap().into_inner();
+                                            let next_opt = node
+                                                .find(|r| r.as_rule() == parser::Rule::term)
+                                                .unwrap()
+                                                .into_inner()
+                                                .find(|r| r.as_rule() == parser::Rule::node);
+
+                                            if let Some(new_next) = next_opt {
+                                                next = new_next;
+                                            } else {
+                                                break None;
+                                            }
+                                        }
+                                        _ => unreachable!(
+                                            "unexpected rule in node: {:?}",
+                                            next.as_rule()
+                                        ),
+                                    };
+                                }
+                                .map(|p| p.as_str())
+                            }
+                            Err(_) => None,
+                        }
+                        .unwrap_or("");
+
+                    if self
+                        .get_rule_analysis(&text_document.uri, extracted_token_identifier)
+                        .is_some()
+                        || BUILTINS.contains(&extracted_token_identifier)
+                        || extracted_token.starts_with('\"')
+                    {
+                        let mut rule_name_number = 0;
+                        let extracted_rule_name = loop {
+                            rule_name_number += 1;
+                            let extracted_rule_name = format!("{}_{}", rule_name, rule_name_number);
+                            if self
+                                .get_rule_analysis(&text_document.uri, &extracted_rule_name)
+                                .is_none()
+                            {
+                                break extracted_rule_name;
+                            }
+                        };
+
+                        let extracted_rule = format!(
+                            "{} = {{ {} }}",
+                            extracted_rule_name.trim(),
+                            extracted_token.trim(),
+                        );
+
+                        let mut edits = Vec::new();
+
+                        edits.push(TextEdit {
+                            range: Range {
+                                start: Position {
+                                    line: location.range.end.line + 1,
+                                    character: 0,
+                                },
+                                end: Position {
+                                    line: location.range.end.line + 1,
+                                    character: 0,
+                                },
+                            },
+                            new_text: format!("{}\n", extracted_rule),
+                        });
+
+                        let mut changes = HashMap::new();
+                        changes.insert(text_document.uri.clone(), edits);
+
+                        for (url, analysis) in self.analyses.iter() {
+                            for (_, ra) in analysis.rules.iter() {
+                                if let Some(ra) = ra {
+                                    for (token, location) in ra.tokens.iter() {
+                                        if token == extracted_token {
+                                            changes
+                                                .entry(url.clone())
+                                                .or_insert_with(Vec::new)
+                                                .push(TextEdit {
+                                                    range: location.range,
+                                                    new_text: format!("{} ", extracted_rule_name),
+                                                });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        actions.push(CodeActionOrCommand::CodeAction(CodeAction {
+                            title: "Extract into new rule".to_owned(),
+                            kind: Some(CodeActionKind::REFACTOR_EXTRACT),
+                            edit: Some(WorkspaceEdit {
+                                changes: Some(changes),
+                                document_changes: None,
+                                change_annotations: None,
+                            }),
+                            ..Default::default()
+                        }));
+                    }
                 }
             }
         }

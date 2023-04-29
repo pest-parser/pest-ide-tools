@@ -216,3 +216,10 @@ pub fn validate_pairs(pairs: Pairs<'_, Rule>) -> Result<(), Vec<pest::error::Err
     parser::consume_rules(pairs)?;
     Ok(())
 }
+
+pub fn range_contains(primary: &Range, secondary: &Range) -> bool {
+    primary.start.line <= secondary.start.line
+        && primary.start.character <= secondary.start.character
+        && primary.end.line >= secondary.end.line
+        && primary.end.character >= secondary.end.character
+}
