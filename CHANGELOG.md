@@ -4,6 +4,12 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 
+## v0.3.3
+
+- fix(server): hotfix for #28, ranges (along with other tokens like insensitive strings) no longer crash the server
+
+A proper fix for the code causing the crash in #28 will be released, but I do not have the time at the moment.
+
 ## v0.3.2
 
 - fix(vscode): update checker is now enabled by default, and some of its logic

@@ -362,14 +362,14 @@ impl PestLanguageServerImpl {
                                     loop {
                                         match next.as_rule() {
                                             parser::Rule::terminal => {
-                                                break next.into_inner().find(|r| {
-                                                    r.as_rule() == parser::Rule::identifier
-                                                });
+                                                next = next.into_inner().next().unwrap();
                                             }
-                                            parser::Rule::identifier => {
-                                                break Some(next);
-                                            }
-                                            parser::Rule::string => {
+                                            parser::Rule::_push
+                                            | parser::Rule::peek_slice
+                                            | parser::Rule::identifier
+                                            | parser::Rule::string
+                                            | parser::Rule::insensitive_string
+                                            | parser::Rule::range => {
                                                 break Some(next);
                                             }
                                             parser::Rule::opening_paren => {
@@ -403,6 +403,10 @@ impl PestLanguageServerImpl {
                             .is_some()
                             || BUILTINS.contains(&extracted_token_identifier)
                             || extracted_token.starts_with('\"')
+                            || extracted_token.starts_with('\'')
+                            || extracted_token.starts_with("PUSH")
+                            || extracted_token.starts_with("PEEK")
+                            || extracted_token.starts_with("^\"")
                         {
                             let mut rule_name_number = 0;
                             let extracted_rule_name = loop {
@@ -436,7 +440,11 @@ impl PestLanguageServerImpl {
                                         character: 0,
                                     },
                                 },
-                                new_text: format!("{}\n", extracted_rule),
+                                new_text: format!(
+                                    "{}{}\n",
+                                    if line.ends_with('\n') { "" } else { "\n" },
+                                    extracted_rule
+                                ),
                             });
 
                             let mut changes = HashMap::new();
