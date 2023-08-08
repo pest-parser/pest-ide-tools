@@ -78,7 +78,7 @@ impl PestLanguageServerImpl {
 
         if self.config.check_for_updates {
             self.client
-                .log_message(MessageType::INFO, format!("Checking for updates..."))
+                .log_message(MessageType::INFO, "Checking for updates...".to_string())
                 .await;
 
             if let Some(new_version) = check_for_updates().await {
@@ -769,7 +769,7 @@ impl PestLanguageServerImpl {
                         rules: HashMap::new(),
                     })
                     .update_from(pairs);
-            } else if let Err(errors) = pairs {                
+            } else if let Err(errors) = pairs {
                 diagnostics.insert(
                     url.clone(),
                     PublishDiagnosticsParams::new(

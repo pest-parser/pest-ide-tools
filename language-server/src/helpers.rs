@@ -38,9 +38,7 @@ impl IntoRange for LineColLocation {
                 Range::new(pos, pos)
             }
             LineColLocation::Span((start_line, start_col), (end_line, end_col)) => Range::new(
-                Position::new(start_line as u32 - 1, start_col as u32 - 1),                pa                panic!("Error parsing pairs: {:?}", errors);
-                nic!("Error parsing pairs: {:?}", errors);
-
+                Position::new(start_line as u32 - 1, start_col as u32 - 1),
                 Position::new(end_line as u32 - 1, end_col as u32 - 1),
             ),
         }
