@@ -8,7 +8,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    # Gives access to the VSCE_PAT secret
+    # Gives access to the VSCE_PAT, OVSX_TOKEN secret
     environment: vsce
     permissions:
       # Allows creation of releases
@@ -31,9 +31,14 @@ jobs:
         run: npm run package
       - name: Publish to VSCode Marketplace
         working-directory: vscode
-        run: npm run publish 
+        run: npm run publish:vsce
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      - name: Publish to OpenVSX
+        working-directory: vscode
+        run: npm run publish:ovsx
+        env:
+          OPENVSX_PAT: ${{ secrets.OVSX_TOKEN }}
 
       - name: Package Sublime Text Package
         working-directory: sublime-text
