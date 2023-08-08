@@ -9,6 +9,9 @@
 			"include": "#strings"
 		},
 		{
+			"include": "#tags"
+		},
+		{
 			"include": "#comments"
 		},
 		{
@@ -101,6 +104,18 @@
 							"include": "#characterescape"
 						}
 					]
+				}
+			]
+		},
+		"tags": {
+			"patterns": [
+				{
+					"name": "entity.name.tag.pest",
+					"match": "#[A-Za-z_][A-Za-z0-9_]*"
+				},
+				{
+					"name": "keyword.operator.assignment.pest",
+					"match": "="
 				}
 			]
 		},

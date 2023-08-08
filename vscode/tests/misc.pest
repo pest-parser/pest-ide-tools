@@ -1,1 +1,2 @@
 test_range = { 'a'..'z' }
+tagged_rule = { #tag_name = test_range+ }
