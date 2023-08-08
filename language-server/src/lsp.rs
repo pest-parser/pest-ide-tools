@@ -769,7 +769,7 @@ impl PestLanguageServerImpl {
                         rules: HashMap::new(),
                     })
                     .update_from(pairs);
-            } else if let Err(errors) = pairs {
+            } else if let Err(errors) = pairs {                
                 diagnostics.insert(
                     url.clone(),
                     PublishDiagnosticsParams::new(
