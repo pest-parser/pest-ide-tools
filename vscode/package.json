@@ -112,21 +112,21 @@
 		"vscode:prepublish": "npm run esbuild-client"
 	},
 	"dependencies": {
-		"node-fetch": "^3.3.1",
+		"node-fetch": "^3.3.2",
 		"vscode-languageclient": "^7.0.0"
 	},
 	"devDependencies": {
-		"@trivago/prettier-plugin-sort-imports": "^4.1.1",
+		"@trivago/prettier-plugin-sort-imports": "^4.2.0",
 		"@types/node": "^18.15.12",
 		"@types/vscode": "^1.74.0",
-		"@typescript-eslint/eslint-plugin": "^5.59.0",
-		"@typescript-eslint/parser": "^5.59.0",
-		"@vscode/vsce": "^2.19.0",
+		"@typescript-eslint/eslint-plugin": "^6.3.0",
+		"@typescript-eslint/parser": "^6.3.0",
+		"@vscode/vsce": "^2.20.1",
 		"esbuild": "^0.17.17",
 		"eslint-config-prettier": "^8.8.0",
 		"eslint-plugin-node": "^11.1.0",
 		"eslint-plugin-prettier": "^4.2.1",
-		"gts": "^3.1.1",
-		"typescript": "^5.0.4"
+		"gts": "^5.0.0",
+		"typescript": "^5.1.6"
 	}
 }
