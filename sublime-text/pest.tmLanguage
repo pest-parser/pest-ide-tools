@@ -39,25 +39,25 @@
             <key>name</key>
             <string>keyword.control.pest</string>
             <key>match</key>
-            <string>PUSH|(POP|PEEK)(_ALL)?</string>
+            <string>^(PUSH|POP|PEEK|POP_ALL|PEEK_ALL)$</string>
           </dict>
           <dict>
             <key>name</key>
             <string>variable.language.implicit.pest</string>
             <key>match</key>
-            <string>WHITESPACE|COMMENT</string>
+            <string>^(WHITESPACE|COMMENT)$</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.borders.pest</string>
             <key>match</key>
-            <string>[SE]OI</string>
+            <string>^(SOI|EOI)$</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.ascii.pest</string>
             <key>match</key>
-            <string>NEWLINE|ASCII_(ALPHA(_UPPER|_LOWER|NUMERIC)?|(NONZERO_|BIN_|OCT_|HEX_)?DIGIT)</string>
+            <string>^(NEWLINE|ASCII_DIGIT|ASCII_NONZERO_DIGIT|ASCII_BIN_DIGIT|ASCII_OCT_DIGIT|ASCII_HEX_DIGIT|ASCII_ALPHA_LOWER|ASCII_ALPHA_UPPER|ASCII_ALPHA|ASCII_ALPHANUMERIC)$</string>
           </dict>
           <dict>
             <key>name</key>
