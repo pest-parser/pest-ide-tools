@@ -63,49 +63,49 @@
             <key>name</key>
             <string>constant.language.character.unicode.letter.pest</string>
             <key>match</key>
-            <string>ANY|((UPPER|LOWER|TITLE)CASE_|CASED_|MODIFIER_|OTHER_)?LETTER</string>
+            <string>^(ANY|LETTER|CASED_LETTER|UPPERCASE_LETTER|LOWERCASE_LETTER|TITLECASE_LETTER|MODIFIER_LETTER|OTHER_LETTER)$</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.mark.pest</string>
             <key>match</key>
-            <string>(NONSPACING_|SPACING_|ENCLOSING_)?MARK</string>
+            <string>^(MARK|COMBINING_SPACING_MARK|ENCLOSING_MARK|NONSPACING_MARK)$</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.number.pest</string>
             <key>match</key>
-            <string>(DECIMAL_|LETTER_|OTHER_)?NUMBER</string>
+            <string>^(NUMBER|DECIMAL_NUMBER|LETTER_NUMBER|OTHER_NUMBER)$</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.punctuation.pest</string>
             <key>match</key>
-            <string>(CONNECTOR_|DASH_|OPEN_|CLOSE_|INITIAL_|FINAL_|OTHER_)?PUNCTUATION</string>
+            <string>^(PUNCTUATION|CONNECTOR_PUNCTUATION|DASH_PUNCTUATION|OPEN_PUNCTUATION|CLOSE_PUNCTUATION|INITIAL_PUNCTUATION|FINAL_PUNCTUATION|OTHER_PUNCTUATION)$</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.symbol.pest</string>
             <key>match</key>
-            <string>(MATH_|CURRENCY_|MODIFIER_|OTHER_)?SYMBOL</string>
+            <string>^(SYMBOL|MATH_SYMBOL|CURRENCY_SYMBOL|MODIFIER_SYMBOL|OTHER_SYMBOL)$</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.separator.pest</string>
             <key>match</key>
-            <string>(SPACE_|LINE_|PARAGRAPH_)?SEPARATOR</string>
+            <string>^(SEPARATOR|SPACE_SEPARATOR|LINE_SEPARATOR|PARAGRAPH_SEPARATOR)$</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.other.pest</string>
             <key>match</key>
-            <string>CONTROL|FORMAT|SURROGATE|PRIVATE_USE|UNASSIGNED</string>
+            <string>^(CONTROL|FORMAT|SURROGATE|PRIVATE_USE|UNASSIGNED)$</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.binary.pest</string>
             <key>match</key>
-            <string>ALPHABETIC|BIDI_CONTROL|CASE_IGNORABLE|CASED|CHANGES_WHEN_CASEFOLDED|CHANGES_WHEN_CASEMAPPED|CHANGES_WHEN_LOWERCASED|CHANGES_WHEN_TITLECASED|CHANGES_WHEN_UPPERCASED|DASH|DEFAULT_IGNORABLE_CODE_POINT|DEPRECATED|DIACRITIC|EXTENDER|GRAPHEME_BASE|GRAPHEME_EXTEND|GRAPHEME_LINK|HEX_DIGIT|HYPHEN|IDS_BINARY_OPERATOR|IDS_TRINARY_OPERATOR|ID_CONTINUE|ID_START|IDEOGRAPHIC|JOIN_CONTROL|LOGICAL_ORDER_EXCEPTION|LOWERCASE|MATH|NONCHARACTER_CODE_POINT|OTHER_ALPHABETIC|OTHER_DEFAULT_IGNORABLE_CODE_POINT|OTHER_GRAPHEME_EXTEND|OTHER_ID_CONTINUE|OTHER_ID_START|OTHER_LOWERCASE|OTHER_MATH|OTHER_UPPERCASE|PATTERN_SYNTAX|PATTERN_WHITE_SPACE|PREPENDED_CONCATENATION_MARK|QUOTATION_MARK|RADICAL|REGIONAL_INDICATOR|SENTENCE_TERMINAL|SOFT_DOTTED|TERMINAL_PUNCTUATION|UNIFIED_IDEOGRAPH|UPPERCASE|VARIATION_SELECTOR|WHITE_SPACE|XID_CONTINUE|XID_START</string>
+            <string>^(ALPHABETIC|BIDI_CONTROL|CASE_IGNORABLE|CASED|CHANGES_WHEN_CASEFOLDED|CHANGES_WHEN_CASEMAPPED|CHANGES_WHEN_LOWERCASED|CHANGES_WHEN_TITLECASED|CHANGES_WHEN_UPPERCASED|DASH|DEFAULT_IGNORABLE_CODE_POINT|DEPRECATED|DIACRITIC|EXTENDER|GRAPHEME_BASE|GRAPHEME_EXTEND|GRAPHEME_LINK|HEX_DIGIT|HYPHEN|IDS_BINARY_OPERATOR|IDS_TRINARY_OPERATOR|ID_CONTINUE|ID_START|IDEOGRAPHIC|JOIN_CONTROL|LOGICAL_ORDER_EXCEPTION|LOWERCASE|MATH|NONCHARACTER_CODE_POINT|OTHER_ALPHABETIC|OTHER_DEFAULT_IGNORABLE_CODE_POINT|OTHER_GRAPHEME_EXTEND|OTHER_ID_CONTINUE|OTHER_ID_START|OTHER_LOWERCASE|OTHER_MATH|OTHER_UPPERCASE|PATTERN_SYNTAX|PATTERN_WHITE_SPACE|PREPENDED_CONCATENATION_MARK|QUOTATION_MARK|RADICAL|REGIONAL_INDICATOR|SENTENCE_TERMINAL|SOFT_DOTTED|TERMINAL_PUNCTUATION|UNIFIED_IDEOGRAPH|UPPERCASE|VARIATION_SELECTOR|WHITE_SPACE|XID_CONTINUE|XID_START)$</string>
           </dict>
           <dict>
             <key>name</key>
