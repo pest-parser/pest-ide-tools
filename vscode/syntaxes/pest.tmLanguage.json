@@ -79,7 +79,7 @@
 				},
 				{
 					"name": "variable.name.pest",
-					"match": "[A-Za-z_][A-Za-z0-9_]*"
+					"match": "\b[A-Za-z_][A-Za-z0-9_]*\b"
 				}
 			]
 		},
