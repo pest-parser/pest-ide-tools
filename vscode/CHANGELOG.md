@@ -4,6 +4,11 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 
+## v0.3.4
+
+- [[notpeter](https://github.com/notpeter)] fix(server): off-by-one error (#37)
+- [[notpeter](https://github.com/notpeter)] fix(grammar): issues with highlighting rules that started with a built-in's name (#38)
+
 ## v0.3.3
 
 - fix(server): hotfix for #28, ranges (along with other tokens like insensitive strings) no longer crash the server
