@@ -34,7 +34,7 @@ impl IntoRange for LineColLocation {
     fn into_range(self) -> Range {
         match self {
             LineColLocation::Pos((line, col)) => {
-                let pos = Position::new(line as u32, col as u32);
+                let pos = Position::new(line as u32 - 1, col as u32 - 1);
                 Range::new(pos, pos)
             }
             LineColLocation::Span((start_line, start_col), (end_line, end_col)) => Range::new(
