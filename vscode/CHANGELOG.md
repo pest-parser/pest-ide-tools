@@ -4,6 +4,10 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 
+## v0.3.5
+
+- fix(ci): fix the publish workflow 
+
 ## v0.3.4
 
 - [[notpeter](https://github.com/notpeter)] fix(server): off-by-one error (#37)

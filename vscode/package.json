@@ -103,7 +103,7 @@
 	"scripts": {
 		"package": "vsce package --githubBranch main --out pest.vsix",
 		"publish:vsce": "vsce publish --githubBranch main",
-		"publish:ovsx": "ovsx publish -p $OPEN_VSX_PAT",
+		"publish:ovsx": "ovsx publish -p $OPENVSX_PAT",
 		"fix": "gts fix",
 		"lint": "gts lint -- . --max-warnings 0",
 		"fmt": "prettier --write 'client/**/*.ts' '*.js' 'language-configuration.json' 'tsconfig.json' 'syntaxes/*.json'",
