@@ -39,73 +39,73 @@
             <key>name</key>
             <string>keyword.control.pest</string>
             <key>match</key>
-            <string>PUSH|(POP|PEEK)(_ALL)?</string>
+            <string>\b(PUSH|POP|PEEK|POP_ALL|PEEK_ALL)\b</string>
           </dict>
           <dict>
             <key>name</key>
             <string>variable.language.implicit.pest</string>
             <key>match</key>
-            <string>WHITESPACE|COMMENT</string>
+            <string>\b(WHITESPACE|COMMENT)\b</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.borders.pest</string>
             <key>match</key>
-            <string>[SE]OI</string>
+            <string>\b(SOI|EOI)\b</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.ascii.pest</string>
             <key>match</key>
-            <string>NEWLINE|ASCII_(ALPHA(_UPPER|_LOWER|NUMERIC)?|(NONZERO_|BIN_|OCT_|HEX_)?DIGIT)</string>
+            <string>\b(NEWLINE|ASCII_DIGIT|ASCII_NONZERO_DIGIT|ASCII_BIN_DIGIT|ASCII_OCT_DIGIT|ASCII_HEX_DIGIT|ASCII_ALPHA_LOWER|ASCII_ALPHA_UPPER|ASCII_ALPHA|ASCII_ALPHANUMERIC)\b</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.letter.pest</string>
             <key>match</key>
-            <string>ANY|((UPPER|LOWER|TITLE)CASE_|CASED_|MODIFIER_|OTHER_)?LETTER</string>
+            <string>\b(ANY|LETTER|CASED_LETTER|UPPERCASE_LETTER|LOWERCASE_LETTER|TITLECASE_LETTER|MODIFIER_LETTER|OTHER_LETTER)\b</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.mark.pest</string>
             <key>match</key>
-            <string>(NONSPACING_|SPACING_|ENCLOSING_)?MARK</string>
+            <string>\b(MARK|COMBINING_SPACING_MARK|ENCLOSING_MARK|NONSPACING_MARK)\b</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.number.pest</string>
             <key>match</key>
-            <string>(DECIMAL_|LETTER_|OTHER_)?NUMBER</string>
+            <string>\b(NUMBER|DECIMAL_NUMBER|LETTER_NUMBER|OTHER_NUMBER)\b</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.punctuation.pest</string>
             <key>match</key>
-            <string>(CONNECTOR_|DASH_|OPEN_|CLOSE_|INITIAL_|FINAL_|OTHER_)?PUNCTUATION</string>
+            <string>\b(PUNCTUATION|CONNECTOR_PUNCTUATION|DASH_PUNCTUATION|OPEN_PUNCTUATION|CLOSE_PUNCTUATION|INITIAL_PUNCTUATION|FINAL_PUNCTUATION|OTHER_PUNCTUATION)\b</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.symbol.pest</string>
             <key>match</key>
-            <string>(MATH_|CURRENCY_|MODIFIER_|OTHER_)?SYMBOL</string>
+            <string>\b(SYMBOL|MATH_SYMBOL|CURRENCY_SYMBOL|MODIFIER_SYMBOL|OTHER_SYMBOL)\b</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.separator.pest</string>
             <key>match</key>
-            <string>(SPACE_|LINE_|PARAGRAPH_)?SEPARATOR</string>
+            <string>\b(SEPARATOR|SPACE_SEPARATOR|LINE_SEPARATOR|PARAGRAPH_SEPARATOR)\b</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.other.pest</string>
             <key>match</key>
-            <string>CONTROL|FORMAT|SURROGATE|PRIVATE_USE|UNASSIGNED</string>
+            <string>\b(CONTROL|FORMAT|SURROGATE|PRIVATE_USE|UNASSIGNED)\b</string>
           </dict>
           <dict>
             <key>name</key>
             <string>constant.language.character.unicode.binary.pest</string>
             <key>match</key>
-            <string>ALPHABETIC|BIDI_CONTROL|CASE_IGNORABLE|CASED|CHANGES_WHEN_CASEFOLDED|CHANGES_WHEN_CASEMAPPED|CHANGES_WHEN_LOWERCASED|CHANGES_WHEN_TITLECASED|CHANGES_WHEN_UPPERCASED|DASH|DEFAULT_IGNORABLE_CODE_POINT|DEPRECATED|DIACRITIC|EXTENDER|GRAPHEME_BASE|GRAPHEME_EXTEND|GRAPHEME_LINK|HEX_DIGIT|HYPHEN|IDS_BINARY_OPERATOR|IDS_TRINARY_OPERATOR|ID_CONTINUE|ID_START|IDEOGRAPHIC|JOIN_CONTROL|LOGICAL_ORDER_EXCEPTION|LOWERCASE|MATH|NONCHARACTER_CODE_POINT|OTHER_ALPHABETIC|OTHER_DEFAULT_IGNORABLE_CODE_POINT|OTHER_GRAPHEME_EXTEND|OTHER_ID_CONTINUE|OTHER_ID_START|OTHER_LOWERCASE|OTHER_MATH|OTHER_UPPERCASE|PATTERN_SYNTAX|PATTERN_WHITE_SPACE|PREPENDED_CONCATENATION_MARK|QUOTATION_MARK|RADICAL|REGIONAL_INDICATOR|SENTENCE_TERMINAL|SOFT_DOTTED|TERMINAL_PUNCTUATION|UNIFIED_IDEOGRAPH|UPPERCASE|VARIATION_SELECTOR|WHITE_SPACE|XID_CONTINUE|XID_START</string>
+            <string>\b(ALPHABETIC|BIDI_CONTROL|CASE_IGNORABLE|CASED|CHANGES_WHEN_CASEFOLDED|CHANGES_WHEN_CASEMAPPED|CHANGES_WHEN_LOWERCASED|CHANGES_WHEN_TITLECASED|CHANGES_WHEN_UPPERCASED|DASH|DEFAULT_IGNORABLE_CODE_POINT|DEPRECATED|DIACRITIC|EXTENDER|GRAPHEME_BASE|GRAPHEME_EXTEND|GRAPHEME_LINK|HEX_DIGIT|HYPHEN|IDS_BINARY_OPERATOR|IDS_TRINARY_OPERATOR|ID_CONTINUE|ID_START|IDEOGRAPHIC|JOIN_CONTROL|LOGICAL_ORDER_EXCEPTION|LOWERCASE|MATH|NONCHARACTER_CODE_POINT|OTHER_ALPHABETIC|OTHER_DEFAULT_IGNORABLE_CODE_POINT|OTHER_GRAPHEME_EXTEND|OTHER_ID_CONTINUE|OTHER_ID_START|OTHER_LOWERCASE|OTHER_MATH|OTHER_UPPERCASE|PATTERN_SYNTAX|PATTERN_WHITE_SPACE|PREPENDED_CONCATENATION_MARK|QUOTATION_MARK|RADICAL|REGIONAL_INDICATOR|SENTENCE_TERMINAL|SOFT_DOTTED|TERMINAL_PUNCTUATION|UNIFIED_IDEOGRAPH|UPPERCASE|VARIATION_SELECTOR|WHITE_SPACE|XID_CONTINUE|XID_START)\b</string>
           </dict>
           <dict>
             <key>name</key>
