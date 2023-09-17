@@ -4,6 +4,10 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 
+## v0.3.6
+
+- [[Fluffyalien1422](https://github.com/Fluffyalien1422)] fix(vscode): add quotes around path when invoking the LS (#41)
+
 ## v0.3.5
 
 - fix(ci): fix the publish workflow 
