@@ -106,8 +106,8 @@
 		"publish:ovsx": "ovsx publish -p $OPENVSX_PAT",
 		"fix": "gts fix",
 		"lint": "gts lint -- . --max-warnings 0",
-		"fmt": "prettier --write 'client/**/*.ts' '*.js' 'language-configuration.json' 'tsconfig.json' 'syntaxes/*.json'",
-		"fmt-check": "prettier --check 'client/**/*.ts' '*.js' 'language-configuration.json' 'tsconfig.json' 'syntaxes/*.json'",
+		"fmt": "prettier --write \"client/**/*.ts\" \"*.js\" \"language-configuration.json\" \"tsconfig.json\" \"syntaxes/*.json\"",
+		"fmt-check": "prettier --check \"client/**/*.ts\" \"*.js\" \"language-configuration.json\" \"tsconfig.json\" \"syntaxes/*.json\"",
 		"esbuild-with-rust": "cd .. && cargo build -p pest-language-server && cd vscode && npm run esbuild-client",
 		"esbuild-client": "esbuild client=./client/src --bundle --outdir=build --external:vscode --format=cjs --platform=node --minify",
 		"vscode:prepublish": "npm run esbuild-client"
