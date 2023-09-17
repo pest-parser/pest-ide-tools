@@ -24,7 +24,8 @@ export async function findServer(): Promise<string | undefined> {
 	const config = workspace.getConfiguration("pestIdeTools");
 	const updateCheckerEnabled = config.get("checkForUpdates") as boolean;
 
-	const currentVersion = await promisify(exec)(`${path} --version`).then(s =>
+	// use quotes around path because the path may have spaces in it
+	const currentVersion = await promisify(exec)(`"${path}" --version`).then(s =>
 		s.stdout.trim()
 	);
 	outputChannel.appendLine(`[TS] Server version: v${currentVersion}`);
