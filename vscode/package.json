@@ -1,134 +1,134 @@
 {
-	"name": "pest-ide-tools",
-	"displayName": "Pest IDE Tools",
-	"description": "Tools for the Rust-based Pest parser generator",
-	"publisher": "pest",
-	"homepage": "https://pest.rs",
-	"keywords": [
-		"pest",
-		"parser",
-		"rust",
-		"peg",
-		"grammar"
-	],
-	"categories": [
-		"Formatters",
-		"Programming Languages"
-	],
-	"version": "0.3.6",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/pest-parser/pest-ide-tools"
-	},
-	"bugs": {
-		"url": "https://github.com/pest-parser/pest-ide-tools/issues"
-	},
-	"license": "Apache-2.0",
-	"icon": "icon.png",
-	"engines": {
-		"vscode": "^1.74.0"
-	},
-	"main": "./build/client.js",
-	"activationEvents": [
-		"onStartupFinished"
-	],
-	"contributes": {
-		"languages": [
-			{
-				"id": "pest",
-				"aliases": [
-					"Pest",
-					"pest"
-				],
-				"extensions": [
-					".pest"
-				],
-				"configuration": "./language-configuration.json",
-				"icon": {
-					"light": "icon.png",
-					"dark": "icon.png"
-				}
-			}
-		],
-		"grammars": [
-			{
-				"language": "pest",
-				"scopeName": "source.pest",
-				"path": "./syntaxes/pest.tmLanguage.json"
-			}
-		],
-		"configuration": [
-			{
-				"id": "pestIdeTools",
-				"title": "Pest IDE Tools",
-				"properties": {
-					"pestIdeTools.serverPath": {
-						"type": [
-							"string",
-							"null"
-						],
-						"default": null,
-						"description": "Set a custom path to a Pest LS binary.",
-						"scope": "window"
-					},
-					"pestIdeTools.customArgs": {
-						"type": "array",
-						"description": "Additional arguments that should be passed to the Pest LS binary.",
-						"default": [],
-						"scope": "window"
-					},
-					"pestIdeTools.checkForUpdates": {
-						"type": "boolean",
-						"description": "Check for updates to the Pest LS binary.",
-						"default": true,
-						"scope": "window"
-					},
-					"pestIdeTools.alwaysUsedRuleNames": {
-						"type": "array",
-						"description": "Rule names that should not be included in the unused rule names diagnostic.",
-						"default": [],
-						"scope": "window"
-					}
-				}
-			}
-		],
-		"commands": [
-			{
-				"category": "Pest",
-				"command": "pestIdeTools.restartServer",
-				"title": "Restart Server"
-			}
-		]
-	},
-	"scripts": {
-		"package": "vsce package --githubBranch main --out pest.vsix",
-		"publish:vsce": "vsce publish --githubBranch main",
-		"publish:ovsx": "ovsx publish -p $OPENVSX_PAT",
-		"fix": "gts fix",
-		"lint": "gts lint -- . --max-warnings 0",
-		"fmt": "prettier --write \"client/**/*.ts\" \"*.js\" \"language-configuration.json\" \"tsconfig.json\" \"syntaxes/*.json\"",
-		"fmt-check": "prettier --check \"client/**/*.ts\" \"*.js\" \"language-configuration.json\" \"tsconfig.json\" \"syntaxes/*.json\"",
-		"esbuild-with-rust": "cd .. && cargo build -p pest-language-server && cd vscode && npm run esbuild-client",
-		"esbuild-client": "esbuild client=./client/src --bundle --outdir=build --external:vscode --format=cjs --platform=node --minify",
-		"vscode:prepublish": "npm run esbuild-client"
-	},
-	"dependencies": {
-		"node-fetch": "^3.3.2",
-		"vscode-languageclient": "^7.0.0"
-	},
-	"devDependencies": {
-		"@trivago/prettier-plugin-sort-imports": "^4.3.0",
-		"@types/node": "^18.15.12",
-		"@types/vscode": "^1.74.0",
-		"@typescript-eslint/eslint-plugin": "^6.3.0",
-		"@typescript-eslint/parser": "^6.3.0",
-		"@vscode/vsce": "^2.20.1",
-		"esbuild": "^0.19.0",
-		"eslint-config-prettier": "^9.0.0",
-		"eslint-plugin-node": "^11.1.0",
-		"eslint-plugin-prettier": "^5.0.0",
-		"gts": "^5.0.0",
-		"ovsx": "^0.8.3",
-		"typescript": "^5.1.6"
-	}
+  "name": "pest-ide-tools",
+  "displayName": "Pest IDE Tools",
+  "description": "Tools for the Rust-based Pest parser generator",
+  "publisher": "pest",
+  "homepage": "https://pest.rs",
+  "keywords": [
+    "pest",
+    "parser",
+    "rust",
+    "peg",
+    "grammar"
+  ],
+  "categories": [
+    "Formatters",
+    "Programming Languages"
+  ],
+  "version": "0.3.7",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pest-parser/pest-ide-tools"
+  },
+  "bugs": {
+    "url": "https://github.com/pest-parser/pest-ide-tools/issues"
+  },
+  "license": "Apache-2.0",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "main": "./build/client.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "pest",
+        "aliases": [
+          "Pest",
+          "pest"
+        ],
+        "extensions": [
+          ".pest"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "icon.png",
+          "dark": "icon.png"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "pest",
+        "scopeName": "source.pest",
+        "path": "./syntaxes/pest.tmLanguage.json"
+      }
+    ],
+    "configuration": [
+      {
+        "id": "pestIdeTools",
+        "title": "Pest IDE Tools",
+        "properties": {
+          "pestIdeTools.serverPath": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null,
+            "description": "Set a custom path to a Pest LS binary.",
+            "scope": "window"
+          },
+          "pestIdeTools.customArgs": {
+            "type": "array",
+            "description": "Additional arguments that should be passed to the Pest LS binary.",
+            "default": [],
+            "scope": "window"
+          },
+          "pestIdeTools.checkForUpdates": {
+            "type": "boolean",
+            "description": "Check for updates to the Pest LS binary.",
+            "default": true,
+            "scope": "window"
+          },
+          "pestIdeTools.alwaysUsedRuleNames": {
+            "type": "array",
+            "description": "Rule names that should not be included in the unused rule names diagnostic.",
+            "default": [],
+            "scope": "window"
+          }
+        }
+      }
+    ],
+    "commands": [
+      {
+        "category": "Pest",
+        "command": "pestIdeTools.restartServer",
+        "title": "Restart Server"
+      }
+    ]
+  },
+  "scripts": {
+    "package": "vsce package --githubBranch main --out pest.vsix",
+    "publish:vsce": "vsce publish --githubBranch main",
+    "publish:ovsx": "ovsx publish -p $OPENVSX_PAT",
+    "fix": "gts fix",
+    "lint": "gts lint -- . --max-warnings 0",
+    "fmt": "prettier --write \"client/**/*.ts\" \"*.js\" \"language-configuration.json\" \"tsconfig.json\" \"syntaxes/*.json\"",
+    "fmt-check": "prettier --check \"client/**/*.ts\" \"*.js\" \"language-configuration.json\" \"tsconfig.json\" \"syntaxes/*.json\"",
+    "esbuild-with-rust": "cd .. && cargo build -p pest-language-server && cd vscode && npm run esbuild-client",
+    "esbuild-client": "esbuild client=./client/src --bundle --outdir=build --external:vscode --format=cjs --platform=node --minify",
+    "vscode:prepublish": "npm run esbuild-client"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "vscode-languageclient": "^7.0.0"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "@types/node": "^18.15.12",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^6.3.0",
+    "@typescript-eslint/parser": "^6.3.0",
+    "@vscode/vsce": "^2.20.1",
+    "esbuild": "^0.19.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "gts": "^5.0.0",
+    "ovsx": "^0.8.3",
+    "typescript": "^5.1.6"
+  }
 }
