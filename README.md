@@ -41,7 +41,9 @@ file.
 - Sublime Text
   - Sublime Text packages can be obtained from [the latest release](https://github.com/pest-parser/pest-ide-tools/releases/latest)
 - Vim
-  - Vim support is provided via the official [pest.vim](https://github.com/pest-parser/pest.vim) package.
+  - Vim support is provided via the [pest.vim](https://github.com/pest-parser/pest.vim) package.
+- Zed
+  - Zed support is provided via the [Zed Pest extension](https://github.com/pest-parser/zed-pest).
 
 Due to the usage of the LSP by this project, adding support for new IDEs should
 be far more achievable than a custom implementation for each editor. Please see
