@@ -903,7 +903,7 @@ dependencies = [
 
 [[package]]
 name = "pest-language-server"
-version = "0.3.6"
+version = "0.3.7"
 dependencies = [
  "pest",
  "pest_fmt",
