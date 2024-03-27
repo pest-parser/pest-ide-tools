@@ -11,12 +11,30 @@ updates:
       interval: "weekly"
     assignees:
       - "Jamalam360"
+      
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/vscode" # Location of package manifests
     schedule:
       interval: "weekly"
     assignees:
       - "Jamalam360"
+    groups:
+      dev-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "@trivago/prettier-plugin-sort-imports"
+          - "@typescript-eslint/*"
+          - "esbuild"
+          - "eslint-*"
+          - "gts"
+          - "ovsx"
+          - "@vscode/vsce"
+    ignore:
+      # we only want to update these when they have a new feature we want
+      - dependency-name: "vscode-languageclient" 
+      - dependency-name: "@types/node"
+      - dependency-name: "@types/vscode"
+    
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
