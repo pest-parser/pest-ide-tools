@@ -9,7 +9,17 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    assignees:
+      - "Jamalam360"
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/vscode" # Location of package manifests
     schedule:
       interval: "weekly"
+    assignees:
+      - "Jamalam360"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    assignees:
+      - "Jamalam360"
