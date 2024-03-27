@@ -1,4 +1,3 @@
 [workspace]
-members = [
-  "language-server",
-]
+resolver = "2"
+members = ["language-server"]
