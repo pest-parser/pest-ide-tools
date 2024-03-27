@@ -8,35 +8,45 @@ inputs:
   secret:
     description: GitHub Token
     required: true
-
+  rust-target:
+    description: Target to install using rustup, or nothing for a default target
+    required: false
 outputs:
   cache-key:
     description: Cache key
-    value: ${{inputs.kind}}-${{runner.os}}-${{steps.toolchain.outputs.cachekey}}
+    value: ${{ inputs.kind }}-${{ runner.os }}-${{ steps.toolchain.outputs.cachekey }}
 
 runs:
   using: composite
   steps:
-    - name: Setup wasm-pack
-      uses: jetli/wasm-pack-action@v0.4.0
-      with:
-        version: latest
+    - name: Install Wasmpack
+      shell: bash
+      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
     - name: Setup Node
-      uses: actions/setup-node@v3
-      with:   
+      uses: actions/setup-node@v4
+      with:
         node-version: 16
         cache: npm
         cache-dependency-path: vscode/package-lock.json
+
     - name: NPM Install
       shell: bash
       working-directory: vscode
       run: npm install
+
     - name: Setup Task
-      uses: arduino/setup-task@v1
+      uses: arduino/setup-task@v2
       with:
         repo-token: ${{ inputs.secret }}
+
+    - name: Install Rust Target
+      shell: bash
+      if: ${{ inputs.rust-target }}
+      run: rustup target add ${{ inputs.rust-target }}
+
     - name: Set up cache
       uses: Swatinem/rust-cache@v2
       with:
-        shared-key: ${{inputs.kind}}-${{runner.os}}-${{steps.toolchain.outputs.cachekey}}
+        shared-key: ${{ inputs.kind }}-${{ runner.os }}-${{ steps.toolchain.outputs.cachekey }}
         workspaces: language-server

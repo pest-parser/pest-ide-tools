@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches:
+      - '**'
   pull_request:
 
 jobs:
@@ -13,15 +15,18 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
       - name: Setup
         uses: ./.github/actions/setup
         with:
           kind: check
           secret: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Format and Lint
         if: contains(matrix.os, 'ubuntu')
         run: task fmt-and-lint
+
       - name: Cargo Check
         run: cargo check
 
@@ -29,17 +34,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
       - name: Setup
         uses: ./.github/actions/setup
         with:
           kind: package-vscode
           secret: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Package Extension
         working-directory: vscode
         run: npm run package
+
       - name: Upload Extension
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pest-vscode
           path: vscode/pest.vsix
@@ -48,12 +56,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
       - name: Package Sublime Text Package
         working-directory: sublime-text
         run: zip pest.sublime-package *
+
       - name: Upload Extension
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pest-sublime-text
           path: sublime-text/pest.sublime-package
