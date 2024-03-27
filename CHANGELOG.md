@@ -4,6 +4,10 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 
+## v0.3.9
+
+- fix(lsp): use rustls rather than native-tls for reqwest
+
 ## v0.3.8
 
 - feat(ci): publish binaries to releases, fixes #51
