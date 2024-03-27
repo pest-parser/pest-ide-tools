@@ -13,9 +13,12 @@ jobs:
     permissions:
       # Allows creation of releases
       contents: write
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
       - name: Setup
         uses: ./.github/actions/setup
         with:
@@ -29,11 +32,13 @@ jobs:
       - name: Package VSCode Extension
         working-directory: vscode
         run: npm run package
+
       - name: Publish to VSCode Marketplace
         working-directory: vscode
         run: npm run publish:vsce
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
       - name: Publish to OpenVSX
         working-directory: vscode
         run: npm run publish:ovsx
@@ -55,14 +60,15 @@ jobs:
           echo "COMMITS<<$EOF" >> $GITHUB_OUTPUT
           echo "COMMITS=\"$(awk -v latest="$(grep -Eo '^## v[0-9]+\.[0-9]+\.[0-9]+$' CHANGELOG.md | head -n1)" '/^## v/ {if (header) exit; header=1} /^## v'${latest}'/{print; next} header && !/^## v/{print}' CHANGELOG.md)\"" >> $GITHUB_OUTPUT
           echo "$EOF" >> $GITHUB_OUTPUT
+
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          name: ${{ github.ref_name }}
           body: |
             # Checklist Before Publishing
 
@@ -74,10 +80,64 @@ jobs:
             ${{ steps.get_changelog.outputs.COMMITS }}
           draft: true
           prerelease: false
-      - uses: xresloader/upload-to-github-release@main
+          files: |
+            vscode/pest.vsix
+            sublime-text/pest.sublime-package
+
+  build-binaries:
+    needs: release
+    runs-on: ${{ matrix.target.runner }}
+
+    permissions:
+      # So we can upload to the release
+      contents: write
+
+    strategy:
+      matrix:
+        target:
+          [
+            { runner: "macos-14", target: "aarch64-apple-darwin", os: darwin, arch: aarch64 }, # Apple silicon
+            { runner: "ubuntu-latest", target: "aarch64-unknown-linux-gnu", os: linux, arch: aarch64 },
+            { runner: "macos-12", target: "x86_64-apple-darwin", os: darwin, arch: x86_64 }, # Intel Mac
+            { runner: "ubuntu-latest", target: "x86_64-pc-windows-gnu", os: windows, arch: x86_64 }, # It's trivial to cross-compile to Windows (less so for Mac)
+            { runner: "ubuntu-latest", target: "x86_64-unknown-linux-gnu", os: linux, arch: x86_64 },
+          ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          kind: release-compile-binaries
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          rust-target: ${{ matrix.target.target }}
+
+      - name: Set up Windows
+        if: matrix.target.os == 'windows'
+        run: sudo apt-get install -y --no-install-recommends mingw-w64 musl-tools gcc-mingw-w64-x86-64-win32
+
+      - name: Set up aarch64 Linux
+        if: matrix.target.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get install gcc-aarch64-linux-gnu
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+
+      - name: Build binary
+        run: cargo build --release --target=${{ matrix.target.target }}
+
+      - name: Package binary (Linux and Mac)
+        if: matrix.target.os != 'windows'
+        run: tar -zcvf pest-language-server-${{ matrix.target.os }}-${{ matrix.target.arch }}.tar.gz -C target/${{ matrix.target.target }}/release pest-language-server
+
+      - name: Package binary (Windows)
+        if: matrix.target.os == 'windows'
+        run: tar -zcvf pest-language-server-${{ matrix.target.os }}-${{ matrix.target.arch }}.tar.gz -C target/${{ matrix.target.target }}/release pest-language-server.exe
+
+      - uses: xresloader/upload-to-github-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          file: "vscode/pest.vsix;sublime-text/pest.sublime-package"
-          release_id: ${{ steps.create_release.outputs.id }}
-          overwrite: true
+          file: "./pest-language-server-${{ matrix.target.os }}-${{ matrix.target.arch }}.tar.gz"
+          release_id: ${{ needs.release.outputs.release_id }}
