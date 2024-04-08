@@ -15,7 +15,7 @@ repository = "https://github.com/pest-parser/pest-ide-tools"
 pest = "2.7.8"
 pest_fmt = "0.2.5"
 pest_meta = "2.7.8"
-reqwest = { version = "0.12.2", features = [
+reqwest = { version = "0.12.3", features = [
   "json",
   "rustls-tls",
 ], default-features = false }
