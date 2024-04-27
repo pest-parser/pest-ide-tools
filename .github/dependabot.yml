@@ -11,6 +11,11 @@ updates:
       interval: "weekly"
     assignees:
       - "Jamalam360"
+    groups:
+      rust-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
       
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/vscode" # Location of package manifests
@@ -41,3 +46,8 @@ updates:
       interval: "weekly"
     assignees:
       - "Jamalam360"
+        groups:
+    gha-dependencies:
+      applies-to: version-updates
+      patterns:
+        - "*"
