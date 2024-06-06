@@ -119,7 +119,7 @@ impl Analysis {
                     false
                 }
             })
-            .filter(|(name, _)| !BUILTINS.contains(&name.as_str()))
+            .filter(|(name, _)| !BUILTINS.contains(&name.as_str()) && !name.starts_with('_'))
             .map(|(name, ra)| {
                 (
                     name,
