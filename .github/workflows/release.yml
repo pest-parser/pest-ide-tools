@@ -72,8 +72,9 @@ jobs:
           body: |
             # Checklist Before Publishing
 
-            - [ ] Check VSCode extension was published correctly.
-            - [ ] Check crates.io release was published correctly.
+            - [ ] Check [VSCode extension](https://marketplace.visualstudio.com/items?itemName=pest.pest-ide-tools) was published correctly.
+            - [ ] Check [OpenVSX extension](https://open-vsx.org/extension/pest/pest-ide-tools) was published correctly.
+            - [ ] Check [crates.io release](https://crates.io/crates/pest-language-server/versions) was published correctly.
             - [ ] Check artifacts were uploaded to this release.
             - [ ] Update release body.
 

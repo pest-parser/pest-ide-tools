@@ -4,6 +4,10 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 
+## v0.3.10
+
+- [[sbillig](https://github.com/sbillig)] feat(analysis): don't emit unused rule warning if the rule name begins with an underscore (#88)
+
 ## v0.3.9
 
 - fix(lsp): use rustls rather than native-tls for reqwest
