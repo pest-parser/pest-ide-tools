@@ -23,7 +23,7 @@
 			"patterns": [
 				{
 					"name": "keyword.control.pest",
-					"match": "\\b(PUSH|POP|PEEK|POP_ALL|PEEK_ALL)\\b"
+					"match": "\\b(PUSH|POP|PEEK|POP_ALL|PEEK_ALL|PUSH_LITERAL)\\b"
 				},
 				{
 					"name": "variable.language.implicit.pest",

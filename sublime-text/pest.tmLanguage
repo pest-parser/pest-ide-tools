@@ -39,7 +39,7 @@
             <key>name</key>
             <string>keyword.control.pest</string>
             <key>match</key>
-            <string>\b(PUSH|POP|PEEK|POP_ALL|PEEK_ALL)\b</string>
+            <string>\b(PUSH|POP|PEEK|POP_ALL|PEEK_ALL|PUSH_LITERAL)\b</string>
           </dict>
           <dict>
             <key>name</key>

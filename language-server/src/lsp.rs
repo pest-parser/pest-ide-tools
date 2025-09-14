@@ -268,7 +268,7 @@ impl PestLanguageServerImpl {
             // Inlining
             if only
                 .as_ref()
-                .map_or(true, |only| only.contains(&CodeActionKind::REFACTOR_INLINE))
+                .is_none_or(|only| only.contains(&CodeActionKind::REFACTOR_INLINE))
             {
                 let mut rule_name = None;
 
@@ -324,9 +324,10 @@ impl PestLanguageServerImpl {
                 }
             }
 
-            if only.as_ref().map_or(true, |only| {
-                only.contains(&CodeActionKind::REFACTOR_EXTRACT)
-            }) && range.start.line == range.end.line
+            if only
+                .as_ref()
+                .is_none_or(|only| only.contains(&CodeActionKind::REFACTOR_EXTRACT))
+                && range.start.line == range.end.line
             {
                 let document = self.documents.get(&text_document.uri).unwrap();
                 let mut lines = document.text.lines();
@@ -824,7 +825,7 @@ impl PestLanguageServerImpl {
             self.documents.clone().into_iter().partition(|(uri, _)| {
                 let maybe_segments = dir.path_segments().zip(uri.path_segments());
                 let compare_paths = |(l, r): (Split<_>, Split<_>)| l.zip(r).all(|(l, r)| l == r);
-                maybe_segments.map_or(false, compare_paths)
+                maybe_segments.is_some_and(compare_paths)
             });
 
         self.documents = not_in_dir;
