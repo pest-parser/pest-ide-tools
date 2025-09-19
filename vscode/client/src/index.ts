@@ -36,14 +36,14 @@ async function openDocument(uri: Uri) {
 
 async function startClientsForFolder(
 	folder: WorkspaceFolder,
-	ctx: ExtensionContext
+	ctx: ExtensionContext,
 ) {
 	const command = await findServer();
 
 	if (!command) {
 		outputChannel.appendLine("[TS] Aborting server start.");
 		await window.showErrorMessage(
-			"Not starting Pest Language Server as a suitable binary was not found."
+			"Not starting Pest Language Server as a suitable binary was not found.",
 		);
 		return;
 	}
@@ -59,14 +59,14 @@ async function startClientsForFolder(
 		pestFilesInFolderPattern(root),
 		true, // ignoreCreateEvents
 		true, // ignoreChangeEvents
-		false // ignoreDeleteEvents
+		false, // ignoreDeleteEvents
 	);
 
 	const createChangeWatcher = workspace.createFileSystemWatcher(
 		pestFilesInFolderPattern(root),
 		false, // ignoreCreateEvents
 		false, // ignoreChangeEvents
-		true // ignoreDeleteEvents
+		true, // ignoreDeleteEvents
 	);
 
 	ctx.subscriptions.push(deleteWatcher);
@@ -86,7 +86,7 @@ async function startClientsForFolder(
 			diagnosticCollectionName: extensionName,
 			workspaceFolder: folder,
 			outputChannel,
-		}
+		},
 	);
 
 	ctx.subscriptions.push(client.start());
@@ -132,7 +132,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 	}
 
 	context.subscriptions.push(
-		workspace.onDidChangeWorkspaceFolders(updateClients(context))
+		workspace.onDidChangeWorkspaceFolders(updateClients(context)),
 	);
 
 	context.subscriptions.push(
@@ -156,7 +156,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 					});
 				}
 			}
-		})
+		}),
 	);
 
 	commands.registerCommand("pestIdeTools.restartServer", async () => {

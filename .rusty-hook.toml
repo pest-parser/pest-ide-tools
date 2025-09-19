@@ -1,5 +1,0 @@
-[hooks]
-pre-commit = "task fmt-and-lint"
-
-[logging]
-verbose = true

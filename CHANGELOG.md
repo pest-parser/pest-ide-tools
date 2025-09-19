@@ -3,6 +3,9 @@
 All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
+## v0.3.12
+
+- feat: add support for PUSH_LITERAL
 
 ## v0.3.11
 
