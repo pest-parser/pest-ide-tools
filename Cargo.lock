@@ -896,7 +896,7 @@ dependencies = [
 
 [[package]]
 name = "pest-language-server"
-version = "0.3.11"
+version = "0.3.12"
 dependencies = [
  "pest",
  "pest_fmt",
