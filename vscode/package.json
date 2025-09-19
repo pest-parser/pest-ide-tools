@@ -15,7 +15,7 @@
     "Formatters",
     "Programming Languages"
   ],
-  "version": "0.3.11",
+  "version": "0.3.12",
   "repository": {
     "type": "git",
     "url": "https://github.com/pest-parser/pest-ide-tools"
@@ -128,7 +128,7 @@
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.0.0",
-    "gts": "^6.2.0",
+    "gts": "^6.0.2",
     "ovsx": "^0.9.1",
     "typescript": "^5.4.5"
   }
