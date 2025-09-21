@@ -26,7 +26,7 @@ export async function findServer(): Promise<string | undefined> {
 
 	// use quotes around path because the path may have spaces in it
 	const currentVersion = await promisify(exec)(`"${path}" --version`).then(s =>
-		s.stdout.trim()
+		s.stdout.trim(),
 	);
 	outputChannel.appendLine(`[TS] Server version: v${currentVersion}`);
 
@@ -41,7 +41,7 @@ export async function findServer(): Promise<string | undefined> {
 			try {
 				res = await fetch(
 					"https://crates.io/api/v1/crates/pest-language-server",
-					{ signal: abortController.signal }
+					{ signal: abortController.signal },
 				);
 				res = await res.json();
 			} catch (e) {
@@ -63,13 +63,13 @@ export async function findServer(): Promise<string | undefined> {
 				const choice = await window.showInformationMessage(
 					`A new version of the Pest Language Server is available (v${currentVersion} --> v${latestVersion}). Would you like to update automatically?`,
 					{},
-					"Yes"
+					"Yes",
 				);
 
 				if (choice) {
 					if (!(await installBinaryViaCargoInstall())) {
 						await window.showErrorMessage(
-							"Failed to update Pest Language Server."
+							"Failed to update Pest Language Server.",
 						);
 					}
 				}
@@ -90,12 +90,12 @@ async function findServerPath(): Promise<string | undefined> {
 		outputChannel.appendLine(
 			path.resolve(
 				workspace.workspaceFolders[0].uri.fsPath,
-				config.get("serverPath") as string
-			)
+				config.get("serverPath") as string,
+			),
 		);
 		return path.resolve(
 			workspace.workspaceFolders[0].uri.fsPath,
-			config.get("serverPath") as string
+			config.get("serverPath") as string,
 		);
 	}
 
@@ -116,7 +116,7 @@ async function findServerPath(): Promise<string | undefined> {
 	const choice = await window.showWarningMessage(
 		"Failed to find an installed Pest Language Server. Would you like to install one using `cargo install`?",
 		{},
-		"Yes"
+		"Yes",
 	);
 
 	if (!choice) {
@@ -128,7 +128,7 @@ async function findServerPath(): Promise<string | undefined> {
 		return expectedPath;
 	} else {
 		await window.showErrorMessage(
-			"Failed to install Pest Language Server. Please either run `cargo install pest-language-server`, or set a custom path using the configuration `pestIdeTools.serverPath`."
+			"Failed to install Pest Language Server. Please either run `cargo install pest-language-server`, or set a custom path using the configuration `pestIdeTools.serverPath`.",
 		);
 	}
 
@@ -201,11 +201,11 @@ async function installBinaryViaCargoInstall(): Promise<boolean> {
 				});
 
 				process.stderr.on("data", data =>
-					logCargoInstallProgress(data.toString(), progress)
+					logCargoInstallProgress(data.toString(), progress),
 				);
 
 				process.stdout.on("data", data =>
-					logCargoInstallProgress(data.toString(), progress)
+					logCargoInstallProgress(data.toString(), progress),
 				);
 
 				const exitCode: number = await new Promise((resolve, _) => {
@@ -213,7 +213,7 @@ async function installBinaryViaCargoInstall(): Promise<boolean> {
 				});
 
 				outputChannel.appendLine(
-					`[TS]: Cargo process exited with code ${exitCode}`
+					`[TS]: Cargo process exited with code ${exitCode}`,
 				);
 
 				if (exitCode === 0) {
@@ -228,7 +228,7 @@ async function installBinaryViaCargoInstall(): Promise<boolean> {
 				progress.report({ message: "An error occurred." });
 				return false;
 			}
-		}
+		},
 	);
 }
 
@@ -237,7 +237,7 @@ function logCargoInstallProgress(
 	progress: Progress<{
 		message?: string | undefined;
 		increment?: number | undefined;
-	}>
+	}>,
 ) {
 	data = data.trim();
 

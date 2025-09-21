@@ -1,6 +1,6 @@
 [package]
 name = "pest-language-server"
-version = "0.3.11"
+version = "0.3.12"
 authors = ["Jamalam <james@jamalam.tech>"]
 description = "A language server for Pest."
 edition = "2021"
@@ -24,6 +24,3 @@ serde_json = "1.0.116"
 tokio = { version = "1.37.0", features = ["full"] }
 tower-lsp = "0.20.0"
 unicode-segmentation = "1.11.0"
-
-[dev-dependencies]
-rusty-hook = "0.11"
