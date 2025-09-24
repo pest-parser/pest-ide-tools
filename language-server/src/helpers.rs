@@ -1,29 +1,25 @@
 use std::collections::HashMap;
 
 use pest::{
-    error::{ErrorVariant, LineColLocation},
-    iterators::Pairs,
     Span,
+    error::{Error, ErrorVariant, LineColLocation},
+    iterators::Pairs
+};
+use pest_meta::{
+    parser::{self, Rule},
+    validator
 };
 use tower_lsp::lsp_types::{
     Diagnostic, DiagnosticSeverity, Location, Position, PublishDiagnosticsParams, Range,
-    TextDocumentItem, Url,
-};
-
-use pest_meta::{
-    parser::{self, Rule},
-    validator,
+    TextDocumentItem, Url
 };
 use unicode_segmentation::UnicodeSegmentation;
 
 pub type Documents = HashMap<Url, TextDocumentItem>;
 pub type Diagnostics = HashMap<Url, PublishDiagnosticsParams>;
 
-pub fn create_empty_diagnostics(
-    (uri, doc): (&Url, &TextDocumentItem),
-) -> (Url, PublishDiagnosticsParams) {
-    let params = PublishDiagnosticsParams::new(uri.clone(), vec![], Some(doc.version));
-    (uri.clone(), params)
+pub fn create_empty_diagnostics(uri: Url, doc: &TextDocumentItem) -> PublishDiagnosticsParams {
+    PublishDiagnosticsParams::new(uri, vec![], Some(doc.version))
 }
 
 pub trait IntoRange {
@@ -39,8 +35,8 @@ impl IntoRange for LineColLocation {
             }
             LineColLocation::Span((start_line, start_col), (end_line, end_col)) => Range::new(
                 Position::new(start_line as u32 - 1, start_col as u32 - 1),
-                Position::new(end_line as u32 - 1, end_col as u32 - 1),
-            ),
+                Position::new(end_line as u32 - 1, end_col as u32 - 1)
+            )
         }
     }
 }
@@ -153,73 +149,73 @@ pub trait IntoDiagnostics {
 
 impl IntoDiagnostics for Vec<pest::error::Error<Rule>> {
     fn into_diagnostics(self) -> Vec<Diagnostic> {
-        self.iter()
-            .map(|e| {
-                Diagnostic::new(
-                    e.line_col.clone().into_range(),
-                    Some(DiagnosticSeverity::ERROR),
-                    None,
-                    Some("Pest Language Server".to_owned()),
-                    match &e.variant {
-                        ErrorVariant::ParsingError {
-                            positives,
-                            negatives,
-                        } => {
-                            let mut message = "Parsing error".to_owned();
-                            if !positives.is_empty() {
-                                message.push_str(" (expected ");
-                                message.push_str(
-                                    positives
-                                        .iter()
-                                        .map(|s| format!("\"{:#?}\"", s))
-                                        .collect::<Vec<String>>()
-                                        .join(", ")
-                                        .as_str(),
-                                );
-                                message.push(')');
-                            }
-
-                            if !negatives.is_empty() {
-                                message.push_str(" (unexpected ");
-                                message.push_str(
-                                    negatives
-                                        .iter()
-                                        .map(|s| format!("\"{:#?}\"", s))
-                                        .collect::<Vec<String>>()
-                                        .join(", ")
-                                        .as_str(),
-                                );
-                                message.push(')');
-                            }
-
-                            message
-                        }
-                        ErrorVariant::CustomError { message } => {
-                            let mut c = message.chars();
-                            match c.next() {
-                                None => String::new(),
-                                Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
-                            }
-                        }
-                    },
-                    None,
-                    None,
-                )
-            })
-            .collect()
+        self.iter().map(error_diagnostic).collect()
     }
 }
 
-pub fn validate_pairs(pairs: Pairs<'_, Rule>) -> Result<(), Vec<pest::error::Error<Rule>>> {
+fn error_diagnostic(e: &Error<Rule>) -> Diagnostic {
+    let message = error_message(e);
+    Diagnostic {
+        range: e.line_col.clone().into_range(),
+        severity: Some(DiagnosticSeverity::ERROR),
+        source: Some("Pest Language Server".to_owned()),
+        message,
+        ..Default::default()
+    }
+}
+
+fn error_message(e: &Error<Rule>) -> String {
+    match &e.variant {
+        ErrorVariant::ParsingError {
+            positives,
+            negatives
+        } => parsing_error(positives, negatives),
+        ErrorVariant::CustomError { message } => message.clone()
+    }
+}
+
+fn parsing_error(positives: &[Rule], negatives: &[Rule]) -> String {
+    let expected = if !positives.is_empty() {
+        let positives = positives
+            .iter()
+            .map(|s| format!("\"{:#?}\"", s))
+            .collect::<Vec<String>>()
+            .join(", ");
+        format!(" (expected {positives})")
+    } else {
+        String::new()
+    };
+
+    let unexpected = if !negatives.is_empty() {
+        let negatives = negatives
+            .iter()
+            .map(|s| format!("\"{:#?}\"", s))
+            .collect::<Vec<String>>()
+            .join(", ");
+        format!(" (expected {negatives})")
+    } else {
+        String::new()
+    };
+
+    format!("Parsing error{expected}{unexpected}")
+}
+
+pub fn validate_pairs(pairs: Pairs<'_, Rule>) -> Result<(), Vec<Error<Rule>>> {
     validator::validate_pairs(pairs.clone())?;
     // This calls validator::validate_ast under the hood
     parser::consume_rules(pairs)?;
     Ok(())
 }
 
-pub fn range_contains(primary: &Range, secondary: &Range) -> bool {
-    primary.start.line <= secondary.start.line
-        && primary.start.character <= secondary.start.character
-        && primary.end.line >= secondary.end.line
-        && primary.end.character >= secondary.end.character
+pub trait RangeContains {
+    fn contains(&self, other: Self) -> bool;
+}
+
+impl RangeContains for Range {
+    fn contains(&self, other: Self) -> bool {
+        self.start.line <= other.start.line
+            && self.start.character <= other.start.character
+            && self.end.line >= other.end.line
+            && self.end.character >= other.end.character
+    }
 }
