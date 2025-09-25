@@ -1,0 +1,6 @@
+use_field_init_shorthand = true
+format_macro_matchers = true
+group_imports = "StdExternalCrate"
+imports_granularity = "Crate"
+trailing_comma = "Never"
+condense_wildcard_suffixes = true

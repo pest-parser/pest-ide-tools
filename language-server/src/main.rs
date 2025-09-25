@@ -1,49 +1,46 @@
-use std::collections::HashMap;
-use std::env::args;
-use std::process::exit;
-use std::sync::Arc;
+use std::{
+    collections::HashMap,
+    io::{stdin, stdout}
+};
 
 use capabilities::capabilities;
-use config::Config;
+use clap::command;
 use lsp::PestLanguageServerImpl;
-use tokio::sync::RwLock;
-use tower_lsp::jsonrpc::Result;
-use tower_lsp::lsp_types::{
-    CodeActionParams, CodeActionResponse, DidChangeConfigurationParams,
-    DidChangeWatchedFilesParams, DocumentFormattingParams, InitializeParams, InitializeResult,
-    InitializedParams,
-};
+use smol::{Unblock, lock::RwLock};
 use tower_lsp::{
+    Client, LanguageServer, LspService, Server,
+    jsonrpc::Result,
     lsp_types::{
-        request::{GotoDeclarationParams, GotoDeclarationResponse},
-        CompletionParams, CompletionResponse, DeleteFilesParams, DidChangeTextDocumentParams,
-        DidOpenTextDocumentParams, GotoDefinitionParams, GotoDefinitionResponse, Hover,
-        HoverParams, Location, ReferenceParams, RenameParams, TextEdit, WorkspaceEdit,
-    },
-    LanguageServer,
+        CodeActionParams, CodeActionResponse, CompletionParams, CompletionResponse,
+        DeleteFilesParams, DidChangeConfigurationParams, DidChangeTextDocumentParams,
+        DidChangeWatchedFilesParams, DidOpenTextDocumentParams, DocumentFormattingParams,
+        GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams, InitializeParams,
+        InitializeResult, InitializedParams, Location, ReferenceParams, RenameParams, TextEdit,
+        WorkspaceEdit,
+        request::{GotoDeclarationParams, GotoDeclarationResponse}
+    }
 };
-use tower_lsp::{Client, LspService, Server};
+
+use crate::lsp::Config;
 
 mod analysis;
 mod builtins;
 mod capabilities;
-mod config;
 mod helpers;
 mod lsp;
-mod update_checker;
 
 #[derive(Debug)]
 /// The async-ready language server. You probably want [PestLanguageServerImpl] instead.
-pub struct PestLanguageServer(Arc<RwLock<PestLanguageServerImpl>>);
+pub struct PestLanguageServer(RwLock<PestLanguageServerImpl>);
 
 impl PestLanguageServer {
     pub fn new(client: Client) -> Self {
-        Self(Arc::new(RwLock::new(PestLanguageServerImpl {
+        Self(RwLock::new(PestLanguageServerImpl {
             analyses: HashMap::new(),
             client,
             config: Config::default(),
-            documents: HashMap::new(),
-        })))
+            documents: HashMap::new()
+        }))
     }
 }
 
@@ -82,59 +79,62 @@ impl LanguageServer for PestLanguageServer {
     }
 
     async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
-        self.0.read().await.code_action(params)
+        Ok(self.0.read().await.code_action(params))
     }
 
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
-        self.0.read().await.completion(params)
+        Ok(self.0.read().await.completion(params))
     }
 
     async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
-        self.0.read().await.hover(params)
+        Ok(self.0.read().await.hover(params))
     }
 
     async fn rename(&self, params: RenameParams) -> Result<Option<WorkspaceEdit>> {
-        self.0.read().await.rename(params)
+        Ok(Some(self.0.read().await.rename(params)))
     }
 
     async fn goto_declaration(
         &self,
-        params: GotoDeclarationParams,
+        params: GotoDeclarationParams
     ) -> Result<Option<GotoDeclarationResponse>> {
-        self.0.read().await.goto_declaration(params)
+        let declaration = self
+            .0
+            .read()
+            .await
+            .goto_definition(params.text_document_position_params)
+            .map(GotoDeclarationResponse::Scalar);
+        Ok(declaration)
     }
 
     async fn goto_definition(
         &self,
-        params: GotoDefinitionParams,
+        params: GotoDefinitionParams
     ) -> Result<Option<GotoDefinitionResponse>> {
-        self.0.read().await.goto_definition(params)
+        let definition = self
+            .0
+            .read()
+            .await
+            .goto_definition(params.text_document_position_params)
+            .map(GotoDefinitionResponse::Scalar);
+        Ok(definition)
     }
 
     async fn references(&self, params: ReferenceParams) -> Result<Option<Vec<Location>>> {
-        self.0.read().await.references(params)
+        Ok(self.0.read().await.references(params))
     }
 
     async fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
-        self.0.read().await.formatting(params)
+        Ok(self.0.read().await.formatting(params))
     }
 }
 
-#[tokio::main]
-async fn main() {
-    for arg in args().skip(1) {
-        match arg.as_str() {
-            "--version" => {
-                println!("{}", env!("CARGO_PKG_VERSION"));
-                exit(0);
-            }
-            _ => eprintln!("Unexpected argument: {}", arg),
-        }
-    }
+fn main() {
+    let _args = command!().get_matches();
 
-    let stdin = tokio::io::stdin();
-    let stdout = tokio::io::stdout();
+    let stdin = Unblock::new(stdin());
+    let stdout = Unblock::new(stdout());
 
     let (service, socket) = LspService::new(PestLanguageServer::new);
-    Server::new(stdin, stdout, socket).serve(service).await;
+    smol::block_on(Server::new(stdin, stdout, socket).serve(service));
 }
