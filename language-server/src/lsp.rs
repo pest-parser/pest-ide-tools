@@ -423,7 +423,7 @@ impl PestLanguageServerImpl {
         });
 
         Some(CodeAction {
-            title: format!("Extract {rule_name} into new rule ({extracted_rule_name})"),
+            title: format!("Extract {extracted_token} into new rule ({extracted_rule_name})"),
             kind: Some(CodeActionKind::REFACTOR_EXTRACT),
             edit,
             ..Default::default()

@@ -10,7 +10,7 @@ tasks:
       - language-server/src/**/*.rs
     
     cmds:
-      - cargo fmt --check --toolchain nightly
+      - cargo fmt --check
       - cargo clippy
 
   vscode-fmt-and-lint:
