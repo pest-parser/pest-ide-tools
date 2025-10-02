@@ -3,15 +3,15 @@ use std::collections::HashMap;
 use pest::{
     Span,
     error::{Error, ErrorVariant, LineColLocation},
-    iterators::Pairs
+    iterators::Pairs,
 };
 use pest_meta::{
     parser::{self, Rule},
-    validator
+    validator,
 };
 use tower_lsp::lsp_types::{
     Diagnostic, DiagnosticSeverity, Position, PublishDiagnosticsParams, Range, TextDocumentItem,
-    Url
+    Url,
 };
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -31,8 +31,8 @@ impl IntoRange for LineColLocation {
             }
             LineColLocation::Span((start_line, start_col), (end_line, end_col)) => Range::new(
                 Position::new(start_line as u32 - 1, start_col as u32 - 1),
-                Position::new(end_line as u32 - 1, end_col as u32 - 1)
-            )
+                Position::new(end_line as u32 - 1, end_col as u32 - 1),
+            ),
         }
     }
 }
@@ -157,9 +157,9 @@ fn error_message(e: &Error<Rule>) -> String {
     match &e.variant {
         ErrorVariant::ParsingError {
             positives,
-            negatives
+            negatives,
         } => parsing_error(positives, negatives),
-        ErrorVariant::CustomError { message } => message.clone()
+        ErrorVariant::CustomError { message } => message.clone(),
     }
 }
 

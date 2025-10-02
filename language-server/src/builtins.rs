@@ -286,7 +286,7 @@ pub enum Builtin {
     WarangCiti,
     Yezidi,
     Yi,
-    ZanabazarSquare
+    ZanabazarSquare,
 }
 
 impl Builtin {
@@ -608,7 +608,7 @@ impl Builtin {
             Self::WarangCiti => "Matches any Unicode Warang Citi character.",
             Self::Yezidi => "Matches any Unicode Yezidi character.",
             Self::Yi => "Matches any Unicode Yi character.",
-            Self::ZanabazarSquare => "Matches any Unicode Zanabazar Square character."
+            Self::ZanabazarSquare => "Matches any Unicode Zanabazar Square character.",
         }
     }
 
@@ -626,7 +626,7 @@ impl Builtin {
             | Self::Drop
             | Self::PopAll
             | Self::PeekAll => CompletionItemKind::KEYWORD,
-            _ => CompletionItemKind::CONSTANT
+            _ => CompletionItemKind::CONSTANT,
         }
     }
 }

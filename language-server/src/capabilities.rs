@@ -3,7 +3,7 @@ use tower_lsp::lsp_types::{
     FileOperationFilter, FileOperationPattern, FileOperationRegistrationOptions,
     HoverProviderCapability, InitializeResult, OneOf, ServerCapabilities, ServerInfo,
     TextDocumentSyncCapability, TextDocumentSyncKind, TextDocumentSyncOptions,
-    WorkspaceFileOperationsServerCapabilities, WorkspaceServerCapabilities
+    WorkspaceFileOperationsServerCapabilities, WorkspaceServerCapabilities,
 };
 
 /// Returns the capabilities of the language server.
@@ -13,7 +13,7 @@ pub fn capabilities() -> InitializeResult {
             change: Some(TextDocumentSyncKind::FULL),
             open_close: Some(true),
             ..Default::default()
-        }
+        },
     ));
 
     let trigger_characters = Some(vec![
@@ -61,7 +61,7 @@ pub fn capabilities() -> InitializeResult {
 
     let server_info = Some(ServerInfo {
         name: "Pest Language Server".to_string(),
-        version: Some(env!("CARGO_PKG_VERSION").to_string())
+        version: Some(env!("CARGO_PKG_VERSION").to_string()),
     });
 
     let capabilities = ServerCapabilities {
@@ -80,6 +80,6 @@ pub fn capabilities() -> InitializeResult {
 
     InitializeResult {
         capabilities,
-        server_info
+        server_info,
     }
 }

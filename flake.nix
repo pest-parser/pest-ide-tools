@@ -62,6 +62,7 @@
             nodejs
             prettier
             rustToolchain
+            typescript-language-server
           ];
         };
       }

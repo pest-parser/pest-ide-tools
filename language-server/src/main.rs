@@ -14,8 +14,8 @@ use tower_lsp::{
         DocumentSymbolResponse, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams,
         InitializeParams, InitializeResult, InitializedParams, Location, ReferenceParams,
         RenameParams, TextEdit, WorkspaceEdit,
-        request::{GotoDeclarationParams, GotoDeclarationResponse}
-    }
+        request::{GotoDeclarationParams, GotoDeclarationResponse},
+    },
 };
 
 mod analysis;
@@ -82,7 +82,7 @@ impl LanguageServer for PestLanguageServer {
 
     async fn goto_declaration(
         &self,
-        params: GotoDeclarationParams
+        params: GotoDeclarationParams,
     ) -> Result<Option<GotoDeclarationResponse>> {
         let declaration = self
             .0
@@ -95,7 +95,7 @@ impl LanguageServer for PestLanguageServer {
 
     async fn goto_definition(
         &self,
-        params: GotoDefinitionParams
+        params: GotoDefinitionParams,
     ) -> Result<Option<GotoDefinitionResponse>> {
         let definition = self
             .0
@@ -116,7 +116,7 @@ impl LanguageServer for PestLanguageServer {
 
     async fn document_symbol(
         &self,
-        params: DocumentSymbolParams
+        params: DocumentSymbolParams,
     ) -> Result<Option<DocumentSymbolResponse>> {
         Ok(self.0.read().await.document_symbol(params))
     }

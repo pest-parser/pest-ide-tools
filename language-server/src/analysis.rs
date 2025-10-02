@@ -2,7 +2,7 @@ use std::{collections::HashMap, iter};
 
 use pest::{
     Span,
-    iterators::{Pair, Pairs}
+    iterators::{Pair, Pairs},
 };
 use pest_meta::parser::Rule;
 use tower_lsp::lsp_types::Range;
@@ -23,7 +23,7 @@ pub struct RuleAnalysis {
     /// The occurrences of the rule, other than its definition.
     pub references: Vec<Range>,
     /// The rules documentation, in markdown.
-    pub doc: Option<String>
+    pub doc: Option<String>,
 }
 
 #[derive(Debug)]
@@ -31,7 +31,7 @@ pub struct RuleAnalysis {
 pub struct Analysis {
     /// Holds analyses for individual rules.
     /// [RuleAnalysis] is [None] for builtins.
-    pub rules: HashMap<String, RuleAnalysis>
+    pub rules: HashMap<String, RuleAnalysis>,
 }
 
 impl Analysis {
@@ -55,7 +55,7 @@ impl Analysis {
                     current_span,
                     &mut precending_docs,
                     inner_pairs,
-                    inner
+                    inner,
                 ),
                 _ => {}
             }
@@ -68,7 +68,7 @@ impl Analysis {
         current_span: Option<Span<'_>>,
         precending_docs: &mut Vec<&str>,
         mut inner_pairs: Pairs<'_, Rule>,
-        inner: Pair<'_, Rule>
+        inner: Pair<'_, Rule>,
     ) {
         let expression_pair = inner_pairs
             .find(|r| r.as_rule() == Rule::expression)
@@ -97,7 +97,7 @@ impl Analysis {
             tokens,
             expression,
             references,
-            doc
+            doc,
         };
         self.rules.insert(inner.as_str().to_owned(), analisys);
     }

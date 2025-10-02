@@ -17,8 +17,8 @@ use tower_lsp::{
         OptionalVersionedTextDocumentIdentifier, Position, PublishDiagnosticsParams, Range,
         ReferenceParams, RenameParams, SymbolInformation, SymbolKind, TextDocumentEdit,
         TextDocumentIdentifier, TextDocumentItem, TextDocumentPositionParams, TextEdit, Url,
-        VersionedTextDocumentIdentifier, WorkspaceEdit
-    }
+        VersionedTextDocumentIdentifier, WorkspaceEdit,
+    },
 };
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -27,14 +27,14 @@ use crate::{
     builtins::Builtin,
     helpers::{
         Diagnostics, Documents, FindWordRange, IntoDiagnostics, IntoRangeWithLine, RangeContains,
-        str_range, validate_pairs
-    }
+        str_range, validate_pairs,
+    },
 };
 
 #[derive(Deserialize, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
-    pub always_used_rule_names: Vec<String>
+    pub always_used_rule_names: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -42,7 +42,7 @@ pub struct PestLanguageServerImpl {
     client: Client,
     documents: Documents,
     analyses: HashMap<Url, Analysis>,
-    config: Config
+    config: Config,
 }
 
 impl PestLanguageServerImpl {
@@ -51,7 +51,7 @@ impl PestLanguageServerImpl {
             analyses: HashMap::new(),
             client,
             config: Config::default(),
-            documents: HashMap::new()
+            documents: HashMap::new(),
         }
     }
 
@@ -60,7 +60,7 @@ impl PestLanguageServerImpl {
             .client
             .configuration(vec![ConfigurationItem {
                 scope_uri: None,
-                section: Some("pestIdeTools".to_string())
+                section: Some("pestIdeTools".to_string()),
             }])
             .await
             .ok()?
@@ -74,7 +74,7 @@ impl PestLanguageServerImpl {
             self.client
                 .log_message(
                     MessageType::ERROR,
-                    "Failed to retrieve configuration from client"
+                    "Failed to retrieve configuration from client",
                 )
                 .await;
         }
@@ -82,7 +82,7 @@ impl PestLanguageServerImpl {
         self.client
             .log_message(
                 MessageType::INFO,
-                format!("Pest Language Server v{}", env!("CARGO_PKG_VERSION"))
+                format!("Pest Language Server v{}", env!("CARGO_PKG_VERSION")),
             )
             .await;
     }
@@ -103,7 +103,7 @@ impl PestLanguageServerImpl {
         self.client
             .log_message(
                 MessageType::INFO,
-                "Updated configuration from client.".to_string()
+                "Updated configuration from client.".to_string(),
             )
             .await;
 
@@ -121,7 +121,7 @@ impl PestLanguageServerImpl {
             self.client
                 .log_message(
                     MessageType::ERROR,
-                    "Reopened already tracked document.".to_string()
+                    "Reopened already tracked document.".to_string(),
                 )
                 .await;
         }
@@ -133,7 +133,7 @@ impl PestLanguageServerImpl {
     pub async fn did_change(&mut self, params: DidChangeTextDocumentParams) {
         let DidChangeTextDocumentParams {
             text_document,
-            content_changes
+            content_changes,
         } = params;
         let VersionedTextDocumentIdentifier { uri, version } = text_document;
 
@@ -212,20 +212,20 @@ impl PestLanguageServerImpl {
         &self,
         analysis: &Analysis,
         text_document: &TextDocumentIdentifier,
-        range: Range
+        range: Range,
     ) -> Option<CodeAction> {
         let ((name, ra), reference) = analysis.rules.iter().find_map(|pair @ (_, ra)| {
             Some((
                 pair,
                 ra.references
                     .iter()
-                    .find(|reference| reference.contains(range))?
+                    .find(|reference| reference.contains(range))?,
             ))
         })?;
 
         let edit = vec![TextEdit {
             range: *reference,
-            new_text: ra.expression.clone()
+            new_text: ra.expression.clone(),
         }];
 
         let change = HashMap::from_iter(iter::once((text_document.uri.clone(), edit)));
@@ -233,7 +233,7 @@ impl PestLanguageServerImpl {
         let edit = Some(WorkspaceEdit {
             changes: Some(change),
             document_changes: None,
-            change_annotations: None
+            change_annotations: None,
         });
 
         Some(CodeAction {
@@ -248,7 +248,7 @@ impl PestLanguageServerImpl {
         &self,
         analysis: &Analysis,
         text_document: &TextDocumentIdentifier,
-        range: Range
+        range: Range,
     ) -> Option<CodeAction> {
         let (name, ra) = analysis.rules.iter().find(|(_, ra)| {
             (ra.identifier_location.contains(range) && !ra.references.is_empty())
@@ -265,11 +265,11 @@ impl PestLanguageServerImpl {
             .iter()
             .map(|reference| TextEdit {
                 range: *reference,
-                new_text: rule_expression.clone()
+                new_text: rule_expression.clone(),
             })
             .chain(iter::once(TextEdit {
                 range: ra.definition_location,
-                new_text: String::new()
+                new_text: String::new(),
             }))
             .collect();
 
@@ -278,7 +278,7 @@ impl PestLanguageServerImpl {
         let edit = Some(WorkspaceEdit {
             changes: Some(changes),
             document_changes: None,
-            change_annotations: None
+            change_annotations: None,
         });
 
         Some(CodeAction {
@@ -292,7 +292,7 @@ impl PestLanguageServerImpl {
     fn refactor_extract(
         &self,
         range: Range,
-        text_document: TextDocumentIdentifier
+        text_document: TextDocumentIdentifier,
     ) -> Option<CodeAction> {
         let document = &self.documents[&text_document.uri];
         let line = document
@@ -331,7 +331,7 @@ impl PestLanguageServerImpl {
 
         let pos = Position {
             line: extracted_token_location.end.line + 1,
-            character: 0
+            character: 0,
         };
 
         let prefix = if line.ends_with('\n') { "" } else { "\n" };
@@ -339,13 +339,13 @@ impl PestLanguageServerImpl {
             TextEdit {
                 range: Range {
                     start: pos,
-                    end: pos
+                    end: pos,
                 },
-                new_text: format!("{prefix}{extracted_rule}\n",)
+                new_text: format!("{prefix}{extracted_rule}\n",),
             },
             TextEdit {
                 range: *extracted_token_location,
-                new_text: extracted_rule_name.clone()
+                new_text: extracted_rule_name.clone(),
             },
         ];
 
@@ -354,7 +354,7 @@ impl PestLanguageServerImpl {
         let edit = Some(WorkspaceEdit {
             changes: Some(changes),
             document_changes: None,
-            change_annotations: None
+            change_annotations: None,
         });
 
         Some(CodeAction {
@@ -392,7 +392,7 @@ impl PestLanguageServerImpl {
                     .clone()
                     .map(|value| MarkupContent {
                         kind: MarkupKind::Markdown,
-                        value
+                        value,
                     })
                     .map(Documentation::MarkupContent),
                 ..Default::default()
@@ -460,7 +460,7 @@ impl PestLanguageServerImpl {
             .unwrap_or("");
         let old_identifier = &str_range(
             line,
-            &line.get_word_range_at_idx(text_document_position.position.character as usize)
+            &line.get_word_range_at_idx(text_document_position.position.character as usize),
         );
 
         let edits = self
@@ -469,19 +469,19 @@ impl PestLanguageServerImpl {
             .flat_map(|ra| ra.references_and_identifier())
             .map(|range| TextEdit {
                 range,
-                new_text: new_name.clone()
+                new_text: new_name.clone(),
             })
             .map(OneOf::Left)
             .collect();
 
         let text_document = OptionalVersionedTextDocumentIdentifier {
             uri: text_document_position.text_document.uri,
-            version: Some(document.version)
+            version: Some(document.version),
         };
 
         let edit = TextDocumentEdit {
             text_document,
-            edits
+            edits,
         };
 
         let document_changes = Some(DocumentChanges::Edits(vec![edit]));
@@ -489,7 +489,7 @@ impl PestLanguageServerImpl {
         WorkspaceEdit {
             change_annotations: None,
             changes: None,
-            document_changes
+            document_changes,
         }
     }
 
@@ -528,7 +528,7 @@ impl PestLanguageServerImpl {
             .references_and_identifier()
             .map(|range| Location {
                 uri: uri.clone(),
-                range
+                range,
             })
             .collect();
         Some(locations)
@@ -565,11 +565,11 @@ impl PestLanguageServerImpl {
                     deprecated: None,
                     location: Location {
                         uri: uri.clone(),
-                        range: ra.identifier_location
+                        range: ra.identifier_location,
                     },
-                    container_name: None
+                    container_name: None,
                 })
-                .collect()
+                .collect(),
         ))
     }
 
@@ -577,12 +577,12 @@ impl PestLanguageServerImpl {
         analyses: &mut HashMap<Url, Analysis>,
         config: &Config,
         uri: Url,
-        document: &TextDocumentItem
+        document: &TextDocumentItem,
     ) -> Result<Vec<Diagnostic>, Vec<Error<Rule>>> {
         let pairs =
             parser::parse(Rule::grammar_rules, document.text.as_str()).map_err(|err| vec![err])?;
         let analysis = analyses.entry(uri.clone()).or_insert(Analysis {
-            rules: HashMap::new()
+            rules: HashMap::new(),
         });
 
         analysis.update_from(pairs.clone());
@@ -605,7 +605,7 @@ impl PestLanguageServerImpl {
             .collect();
         let unused_diagnostics = match unused_diagnostics.len() {
             1 => vec![],
-            _ => unused_diagnostics
+            _ => unused_diagnostics,
         };
 
         validate_pairs(pairs).map(|_| unused_diagnostics)
@@ -631,7 +631,7 @@ impl PestLanguageServerImpl {
         for PublishDiagnosticsParams {
             uri,
             diagnostics,
-            version
+            version,
         } in diagnostics
         {
             self.client
