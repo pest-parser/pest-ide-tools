@@ -82,11 +82,11 @@ impl IntoRangeWithLine for std::ops::Range<usize> {
 }
 
 pub trait FindWordRange {
-    fn get_word_range_at_idx(self, idx: usize) -> std::ops::Range<usize>;
+    fn word_range_at_idx(self, idx: usize) -> std::ops::Range<usize>;
 }
 
 impl FindWordRange for &str {
-    fn get_word_range_at_idx(self, search_idx: usize) -> std::ops::Range<usize> {
+    fn word_range_at_idx(self, search_idx: usize) -> std::ops::Range<usize> {
         fn is_not_identifier(c: char) -> bool {
             c.is_whitespace()
                 || c == '*'

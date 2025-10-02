@@ -102,7 +102,7 @@ impl Analysis {
         self.rules.insert(inner.as_str().to_owned(), analisys);
     }
 
-    pub fn get_unused_rules(&self) -> impl Iterator<Item = (&str, Range)> {
+    pub fn unused_rules(&self) -> impl Iterator<Item = (&str, Range)> {
         self.rules.iter().filter_map(|(name, ra)| {
             if ra.references.is_empty()
                 && !name.starts_with('_')

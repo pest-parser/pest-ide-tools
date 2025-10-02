@@ -306,10 +306,10 @@ impl PestLanguageServerImpl {
             .take_while(|grapheme| *grapheme == " ")
             .count();
 
-        let name_range = line.get_word_range_at_idx(rule_name_start_idx);
+        let name_range = line.word_range_at_idx(rule_name_start_idx);
         let rule_name = &str_range(line, &name_range);
 
-        let ra = self.get_rule_analysis(&text_document.uri, rule_name)?;
+        let ra = self.rule_analysis(&text_document.uri, rule_name)?;
         let selected_token = ra
             .tokens
             .iter()
@@ -319,7 +319,7 @@ impl PestLanguageServerImpl {
         let extracted_rule_name = (0..)
             .map(|rule_name_number| format!("{}_{}", rule_name, rule_name_number))
             .find(|extracted_rule_name| {
-                self.get_rule_analysis(&text_document.uri, extracted_rule_name)
+                self.rule_analysis(&text_document.uri, extracted_rule_name)
                     .is_none()
             })?;
 
@@ -376,7 +376,7 @@ impl PestLanguageServerImpl {
         let line = lines
             .nth(text_document_position.position.line as usize)
             .unwrap_or("");
-        let range = line.get_word_range_at_idx(text_document_position.position.character as usize);
+        let range = line.word_range_at_idx(text_document_position.position.character as usize);
         let partial_identifier = &str_range(line, &range);
 
         let analysis = self.analyses.get(&document.uri)?;
@@ -421,7 +421,7 @@ impl PestLanguageServerImpl {
             .nth(text_document_position_params.position.line as usize)
             .unwrap_or("");
         let range =
-            line.get_word_range_at_idx(text_document_position_params.position.character as usize);
+            line.word_range_at_idx(text_document_position_params.position.character as usize);
         let identifier = &str_range(line, &range);
 
         if let Ok(builtin) = Builtin::from_str(identifier) {
@@ -460,11 +460,11 @@ impl PestLanguageServerImpl {
             .unwrap_or("");
         let old_identifier = &str_range(
             line,
-            &line.get_word_range_at_idx(text_document_position.position.character as usize),
+            &line.word_range_at_idx(text_document_position.position.character as usize),
         );
 
         let edits = self
-            .get_rule_analysis(&document.uri, old_identifier)
+            .rule_analysis(&document.uri, old_identifier)
             .into_iter()
             .flat_map(|ra| ra.references_and_identifier())
             .map(|range| TextEdit {
@@ -498,11 +498,11 @@ impl PestLanguageServerImpl {
         let document = &self.documents[&uri];
         let mut lines = document.text.lines();
         let line = lines.nth(params.position.line as usize).unwrap_or("");
-        let range = line.get_word_range_at_idx(params.position.character as usize);
+        let range = line.word_range_at_idx(params.position.character as usize);
         let identifier = &str_range(line, &range);
 
         let range = self
-            .get_rule_analysis(&document.uri, identifier)?
+            .rule_analysis(&document.uri, identifier)?
             .definition_location;
         Some(Location { uri, range })
     }
@@ -520,10 +520,10 @@ impl PestLanguageServerImpl {
         let line = lines
             .nth(text_document_position.position.line as usize)
             .unwrap_or("");
-        let range = line.get_word_range_at_idx(text_document_position.position.character as usize);
+        let range = line.word_range_at_idx(text_document_position.position.character as usize);
         let identifier = &str_range(line, &range);
 
-        let rule_analysis = self.get_rule_analysis(&document.uri, identifier)?;
+        let rule_analysis = self.rule_analysis(&document.uri, identifier)?;
         let locations = rule_analysis
             .references_and_identifier()
             .map(|range| Location {
@@ -587,8 +587,8 @@ impl PestLanguageServerImpl {
 
         analysis.update_from(pairs.clone());
 
-        let unused_diagnostics: Vec<_> = analysis
-            .get_unused_rules()
+        let unused_rules = analysis.unused_rules();
+        let mut unused_diagnostics: Vec<_> = unused_rules
             .filter(|(rule_name, _)| {
                 !config
                     .always_used_rule_names
@@ -603,10 +603,10 @@ impl PestLanguageServerImpl {
                 ..Default::default()
             })
             .collect();
-        let unused_diagnostics = match unused_diagnostics.len() {
-            1 => vec![],
-            _ => unused_diagnostics,
-        };
+
+        if config.always_used_rule_names.is_empty() && unused_diagnostics.len() == 1 {
+            unused_diagnostics.clear();
+        }
 
         validate_pairs(pairs).map(|_| unused_diagnostics)
     }
@@ -640,7 +640,7 @@ impl PestLanguageServerImpl {
         }
     }
 
-    fn get_rule_analysis(&self, uri: &Url, rule_name: &str) -> Option<&RuleAnalysis> {
+    fn rule_analysis(&self, uri: &Url, rule_name: &str) -> Option<&RuleAnalysis> {
         self.analyses
             .get(uri)
             .and_then(|analysis| analysis.rules.get(rule_name))
