@@ -118,18 +118,18 @@
     "vscode-languageclient": "^7.0.0"
   },
   "devDependencies": {
-    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/node": "^18.15.12",
     "@types/vscode": "^1.74.0",
-    "@typescript-eslint/eslint-plugin": "^7.12.0",
-    "@typescript-eslint/parser": "^7.12.0",
-    "@vscode/vsce": "^2.27.0",
+    "@typescript-eslint/eslint-plugin": "^8.44.1",
+    "@typescript-eslint/parser": "^8.44.1",
+    "@vscode/vsce": "^3.6.2",
     "esbuild": "^0.25.0",
-    "eslint-config-prettier": "^9.0.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.0.0",
     "gts": "^6.0.2",
-    "ovsx": "^0.9.1",
+    "ovsx": "^0.10.5",
     "typescript": "^5.4.5"
   }
 }
