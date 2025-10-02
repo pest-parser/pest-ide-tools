@@ -225,7 +225,7 @@ impl PestLanguageServerImpl {
 
         let edit = vec![TextEdit {
             range: *reference,
-            new_text: ra.expression.clone(),
+            new_text: format!("({})", ra.expression),
         }];
 
         let change = HashMap::from_iter(iter::once((text_document.uri.clone(), edit)));
@@ -265,7 +265,7 @@ impl PestLanguageServerImpl {
             .iter()
             .map(|reference| TextEdit {
                 range: *reference,
-                new_text: rule_expression.clone(),
+                new_text: format!("({rule_expression})"),
             })
             .chain(iter::once(TextEdit {
                 range: ra.definition_location,
