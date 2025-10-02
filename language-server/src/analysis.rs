@@ -104,7 +104,11 @@ impl Analysis {
 
     pub fn get_unused_rules(&self) -> impl Iterator<Item = (&str, Range)> {
         self.rules.iter().filter_map(|(name, ra)| {
-            if ra.references.is_empty() && !name.starts_with('_') {
+            if ra.references.is_empty()
+                && !name.starts_with('_')
+                && name != "COMMENT"
+                && name != "WHITE_SPACE"
+            {
                 return Some((name.as_str(), ra.identifier_location));
             }
 
