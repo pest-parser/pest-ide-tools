@@ -1,25 +1,27 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, iter};
 
-use pest::{Span, iterators::Pairs};
+use pest::{
+    Span,
+    iterators::{Pair, Pairs}
+};
 use pest_meta::parser::Rule;
-use tower_lsp::lsp_types::Location;
-use url::Url;
+use tower_lsp::lsp_types::Range;
 
-use crate::helpers::{FindOccurrences, IntoLocation};
+use crate::helpers::{FindReferences, IntoRange};
 
 #[derive(Debug, Clone)]
 /// Stores analysis information for a rule.
 pub struct RuleAnalysis {
     /// The location of the entire definition of the rule (i.e. `rule = { "hello" }`).
-    pub definition_location: Location,
+    pub definition_location: Range,
     /// The location of the name definition of the rule.
-    pub identifier_location: Location,
+    pub identifier_location: Range,
     /// The tokens that make up the rule.
-    pub tokens: Vec<(String, Location)>,
+    pub tokens: Vec<(String, Range)>,
     /// The rules expression, in [String] form.
     pub expression: String,
-    /// The occurrences of the rule, including its definition.
-    pub occurrences: Vec<Location>,
+    /// The occurrences of the rule, other than its definition.
+    pub references: Vec<Range>,
     /// The rules documentation, in markdown.
     pub doc: Option<String>
 }
@@ -27,8 +29,6 @@ pub struct RuleAnalysis {
 #[derive(Debug)]
 /// Stores analysis information for a document.
 pub struct Analysis {
-    /// The URL of the document that this analysis is for.
-    pub doc_url: Url,
     /// Holds analyses for individual rules.
     /// [RuleAnalysis] is [None] for builtins.
     pub rules: HashMap<String, RuleAnalysis>
@@ -68,7 +68,7 @@ impl Analysis {
         current_span: Option<Span<'_>>,
         precending_docs: &mut Vec<&str>,
         mut inner_pairs: Pairs<'_, Rule>,
-        inner: pest::iterators::Pair<'_, Rule>
+        inner: Pair<'_, Rule>
     ) {
         let expression_pair = inner_pairs
             .find(|r| r.as_rule() == Rule::expression)
@@ -76,14 +76,9 @@ impl Analysis {
         let expression = expression_pair.as_str().to_owned();
         let tokens = expression_pair
             .into_inner()
-            .map(|e| {
-                (
-                    e.as_str().to_owned(),
-                    e.as_span().into_location(&self.doc_url)
-                )
-            })
+            .map(|e| (e.as_str().to_owned(), e.as_span().into_range()))
             .collect();
-        let occurrences = pairs.find_occurrences(&self.doc_url, inner.as_str());
+        let references = pairs.clone().find_references(inner.as_span());
 
         let doc = if precending_docs.is_empty() {
             None
@@ -94,32 +89,35 @@ impl Analysis {
 
         let definition_location = current_span
             .expect("rule should have a defined span")
-            .into_location(&self.doc_url);
-        let identifier_location = inner.as_span().into_location(&self.doc_url);
+            .into_range();
+        let identifier_location = inner.as_span().into_range();
         let analisys = RuleAnalysis {
             identifier_location,
             definition_location,
             tokens,
             expression,
-            occurrences,
+            references,
             doc
         };
         self.rules.insert(inner.as_str().to_owned(), analisys);
     }
 
-    pub fn get_unused_rules(&self) -> Vec<(&String, &Location)> {
-        self.rules
-            .iter()
-            .filter_map(|(name, ra)| {
-                if let Some(occurence) = ra.occurrences.first()
-                    && ra.occurrences.len() == 1
-                    && !name.starts_with('_')
-                {
-                    return Some((name, occurence));
-                }
+    pub fn get_unused_rules(&self) -> impl Iterator<Item = (&str, Range)> {
+        self.rules.iter().filter_map(|(name, ra)| {
+            if ra.references.is_empty() && !name.starts_with('_') {
+                return Some((name.as_str(), ra.identifier_location));
+            }
 
-                None
-            })
-            .collect()
+            None
+        })
+    }
+}
+
+impl RuleAnalysis {
+    pub fn references_and_identifier(&self) -> impl Iterator<Item = Range> {
+        self.references
+            .iter()
+            .copied()
+            .chain(iter::once(self.identifier_location))
     }
 }

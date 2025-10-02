@@ -295,10 +295,8 @@ impl Builtin {
             Self::Any => "Matches any character.",
             Self::Soi => "Matches the start of the input. Does not consume any characters.",
             Self::Eoi => "Matches the end of the input. Does not consume any characters.",
-            Self::Whitespace => {
-                "This rule is inserted between every expression in non atomic rules."
-            }
-            Self::Comment => "This rule is inserted between every expression in non atomic rules.",
+            Self::Whitespace => "Inserted between every expression in non atomic rules.",
+            Self::Comment => "Inserted between every expression in non atomic rules.",
             Self::Push => "Match and push the expression.",
             Self::PushLiteral => "Push the literal without matching.",
             Self::Peek => "Match the expression on top of the stack.",

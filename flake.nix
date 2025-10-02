@@ -36,21 +36,24 @@
 
       in
       {
-        packages.pest-ide-tools =
-          (pkgs.makeRustPlatform {
-            rustc = rustToolchain;
-            cargo = rustToolchain;
-          }).buildRustPackage
-            rec {
-              name = "pest-langage-server";
-              src = pkgs.lib.cleanSource ./.;
-              cargoLock = {
-                lockFile = ./Cargo.lock;
-                allowBuiltinFetchGit = true;
-              };
+        packages = rec {
+          pest-ide-tools =
+            (pkgs.makeRustPlatform {
+              rustc = rustToolchain;
+              cargo = rustToolchain;
+            }).buildRustPackage
+              rec {
+                name = "pest-langage-server";
+                src = pkgs.lib.cleanSource ./.;
+                cargoLock = {
+                  lockFile = ./Cargo.lock;
+                  allowBuiltinFetchGit = true;
+                };
 
-              meta.mainProgram = name;
-            };
+                meta.mainProgram = name;
+              };
+          default = pest-ide-tools;
+        };
 
         devShell = pkgs.mkShell {
           packages = with pkgs; [

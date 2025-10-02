@@ -1,7 +1,4 @@
-use std::{
-    collections::HashMap,
-    io::{stdin, stdout}
-};
+use std::io::{stdin, stdout};
 
 use capabilities::capabilities;
 use clap::command;
@@ -13,15 +10,13 @@ use tower_lsp::{
     lsp_types::{
         CodeActionParams, CodeActionResponse, CompletionParams, CompletionResponse,
         DeleteFilesParams, DidChangeConfigurationParams, DidChangeTextDocumentParams,
-        DidChangeWatchedFilesParams, DidOpenTextDocumentParams, DocumentFormattingParams,
-        GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams, InitializeParams,
-        InitializeResult, InitializedParams, Location, ReferenceParams, RenameParams, TextEdit,
-        WorkspaceEdit,
+        DidOpenTextDocumentParams, DocumentFormattingParams, DocumentSymbolParams,
+        DocumentSymbolResponse, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams,
+        InitializeParams, InitializeResult, InitializedParams, Location, ReferenceParams,
+        RenameParams, TextEdit, WorkspaceEdit,
         request::{GotoDeclarationParams, GotoDeclarationResponse}
     }
 };
-
-use crate::lsp::Config;
 
 mod analysis;
 mod builtins;
@@ -35,12 +30,7 @@ pub struct PestLanguageServer(RwLock<PestLanguageServerImpl>);
 
 impl PestLanguageServer {
     pub fn new(client: Client) -> Self {
-        Self(RwLock::new(PestLanguageServerImpl {
-            analyses: HashMap::new(),
-            client,
-            config: Config::default(),
-            documents: HashMap::new()
-        }))
+        Self(RwLock::new(PestLanguageServerImpl::new(client)))
     }
 }
 
@@ -68,10 +58,6 @@ impl LanguageServer for PestLanguageServer {
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
         self.0.write().await.did_change(params).await;
-    }
-
-    async fn did_change_watched_files(&self, params: DidChangeWatchedFilesParams) {
-        self.0.write().await.did_change_watched_files(params).await;
     }
 
     async fn did_delete_files(&self, params: DeleteFilesParams) {
@@ -126,6 +112,13 @@ impl LanguageServer for PestLanguageServer {
 
     async fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
         Ok(self.0.read().await.formatting(params))
+    }
+
+    async fn document_symbol(
+        &self,
+        params: DocumentSymbolParams
+    ) -> Result<Option<DocumentSymbolResponse>> {
+        Ok(self.0.read().await.document_symbol(params))
     }
 }
 

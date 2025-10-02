@@ -40,14 +40,17 @@ pub fn capabilities() -> InitializeResult {
 
     let filters = vec![FileOperationFilter {
         pattern: FileOperationPattern {
-            glob: "**/*.pest".to_string(),
+            glob: "** /*.pest".to_string(),
             ..Default::default()
         },
         ..Default::default()
     }];
 
+    let operation_options = Some(FileOperationRegistrationOptions { filters });
     let file_operations = Some(WorkspaceFileOperationsServerCapabilities {
-        did_delete: Some(FileOperationRegistrationOptions { filters }),
+        did_delete: operation_options.clone(),
+        did_create: operation_options.clone(),
+        did_rename: operation_options.clone(),
         ..Default::default()
     });
 
@@ -68,6 +71,7 @@ pub fn capabilities() -> InitializeResult {
         code_action_provider,
         definition_provider: Some(OneOf::Left(true)),
         references_provider: Some(OneOf::Left(true)),
+        document_symbol_provider: Some(OneOf::Left(true)),
         document_formatting_provider: Some(OneOf::Left(true)),
         rename_provider: Some(OneOf::Left(true)),
         workspace,

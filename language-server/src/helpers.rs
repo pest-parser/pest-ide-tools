@@ -10,17 +10,13 @@ use pest_meta::{
     validator
 };
 use tower_lsp::lsp_types::{
-    Diagnostic, DiagnosticSeverity, Location, Position, PublishDiagnosticsParams, Range,
-    TextDocumentItem, Url
+    Diagnostic, DiagnosticSeverity, Position, PublishDiagnosticsParams, Range, TextDocumentItem,
+    Url
 };
 use unicode_segmentation::UnicodeSegmentation;
 
 pub type Documents = HashMap<Url, TextDocumentItem>;
-pub type Diagnostics = HashMap<Url, PublishDiagnosticsParams>;
-
-pub fn create_empty_diagnostics(uri: Url, doc: &TextDocumentItem) -> PublishDiagnosticsParams {
-    PublishDiagnosticsParams::new(uri, vec![], Some(doc.version))
-}
+pub type Diagnostics = Vec<PublishDiagnosticsParams>;
 
 pub trait IntoRange {
     fn into_range(self) -> Range;
@@ -49,34 +45,27 @@ impl IntoRange for Span<'_> {
     }
 }
 
-pub trait IntoLocation {
-    fn into_location(self, uri: &Url) -> Location;
+pub trait FindReferences<'a> {
+    fn find_references(self, definition: Span<'a>) -> Vec<Range>;
 }
 
-impl IntoLocation for Span<'_> {
-    fn into_location(self, uri: &Url) -> Location {
-        Location::new(uri.clone(), self.into_range())
-    }
-}
+impl<'a> FindReferences<'a> for Pairs<'a, Rule> {
+    fn find_references(self, definition: Span<'a>) -> Vec<Range> {
+        let mut ranges = vec![];
 
-pub trait FindOccurrences<'a> {
-    fn find_occurrences(&self, doc_uri: &Url, identifier: &'a str) -> Vec<Location>;
-}
-
-impl<'a> FindOccurrences<'a> for Pairs<'a, parser::Rule> {
-    fn find_occurrences(&self, doc_uri: &Url, identifier: &'a str) -> Vec<Location> {
-        let mut locs = vec![];
-
-        for pair in self.clone() {
-            if pair.as_rule() == parser::Rule::identifier && pair.as_str() == identifier {
-                locs.push(pair.as_span().into_location(doc_uri));
+        for pair in self {
+            if pair.as_rule() == Rule::identifier
+                && pair.as_span() != definition
+                && pair.as_str() == definition.as_str()
+            {
+                ranges.push(pair.as_span().into_range());
             }
 
             let inner = pair.into_inner();
-            locs.extend(inner.find_occurrences(doc_uri, identifier));
+            ranges.extend(inner.find_references(definition));
         }
 
-        locs
+        ranges
     }
 }
 
@@ -98,8 +87,8 @@ pub trait FindWordRange {
 
 impl FindWordRange for &str {
     fn get_word_range_at_idx(self, search_idx: usize) -> std::ops::Range<usize> {
-        fn is_identifier(c: char) -> bool {
-            !(c.is_whitespace()
+        fn is_not_identifier(c: char) -> bool {
+            c.is_whitespace()
                 || c == '*'
                 || c == '+'
                 || c == '?'
@@ -111,13 +100,13 @@ impl FindWordRange for &str {
                 || c == '['
                 || c == ']'
                 || c == '('
-                || c == ')')
+                || c == ')'
         }
 
         let next = str_range(self, &(search_idx..self.len()))
             .graphemes(true)
             .enumerate()
-            .find(|(_index, char)| !is_identifier(char.chars().next().unwrap_or(' ')))
+            .find(|(_index, char)| is_not_identifier(char.chars().next().unwrap_or(' ')))
             .map(|(index, _char)| index)
             .map(|index| search_idx + index)
             .unwrap_or(self.len());
@@ -126,7 +115,7 @@ impl FindWordRange for &str {
             .graphemes(true)
             .rev()
             .enumerate()
-            .find(|(_index, char)| !is_identifier(char.chars().next().unwrap_or(' ')))
+            .find(|(_index, char)| is_not_identifier(char.chars().next().unwrap_or(' ')))
             .map(|(index, _char)| index)
             .map(|index| search_idx - index)
             .unwrap_or(0);

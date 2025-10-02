@@ -1,9 +1,6 @@
-use std::{
-    collections::HashMap,
-    iter,
-    str::{FromStr, Split}
-};
+use std::{collections::HashMap, iter, str::FromStr};
 
+use pest::error::Error;
 use pest_meta::parser::{self, Rule};
 use serde::Deserialize;
 use strum::IntoEnumIterator;
@@ -13,13 +10,14 @@ use tower_lsp::{
         CodeAction, CodeActionKind, CodeActionOrCommand, CodeActionParams, CodeActionResponse,
         CompletionItem, CompletionItemKind, CompletionParams, CompletionResponse,
         ConfigurationItem, DeleteFilesParams, Diagnostic, DiagnosticSeverity,
-        DidChangeConfigurationParams, DidChangeTextDocumentParams, DidChangeWatchedFilesParams,
-        DidOpenTextDocumentParams, DocumentChanges, DocumentFormattingParams, Documentation,
-        FileChangeType, FileEvent, Hover, HoverContents, HoverParams, InitializedParams, Location,
+        DidChangeConfigurationParams, DidChangeTextDocumentParams, DidOpenTextDocumentParams,
+        DocumentChanges, DocumentFormattingParams, DocumentSymbolParams, DocumentSymbolResponse,
+        Documentation, Hover, HoverContents, HoverParams, InitializedParams, Location,
         MarkedString, MarkupContent, MarkupKind, MessageType, OneOf,
         OptionalVersionedTextDocumentIdentifier, Position, PublishDiagnosticsParams, Range,
-        ReferenceParams, RenameParams, TextDocumentEdit, TextDocumentIdentifier, TextDocumentItem,
-        TextDocumentPositionParams, TextEdit, Url, VersionedTextDocumentIdentifier, WorkspaceEdit
+        ReferenceParams, RenameParams, SymbolInformation, SymbolKind, TextDocumentEdit,
+        TextDocumentIdentifier, TextDocumentItem, TextDocumentPositionParams, TextEdit, Url,
+        VersionedTextDocumentIdentifier, WorkspaceEdit
     }
 };
 use unicode_segmentation::UnicodeSegmentation;
@@ -29,7 +27,7 @@ use crate::{
     builtins::Builtin,
     helpers::{
         Diagnostics, Documents, FindWordRange, IntoDiagnostics, IntoRangeWithLine, RangeContains,
-        create_empty_diagnostics, str_range, validate_pairs
+        str_range, validate_pairs
     }
 };
 
@@ -41,13 +39,22 @@ pub struct Config {
 
 #[derive(Debug)]
 pub struct PestLanguageServerImpl {
-    pub client: Client,
-    pub documents: Documents,
-    pub analyses: HashMap<Url, Analysis>,
-    pub config: Config
+    client: Client,
+    documents: Documents,
+    analyses: HashMap<Url, Analysis>,
+    config: Config
 }
 
 impl PestLanguageServerImpl {
+    pub fn new(client: Client) -> Self {
+        Self {
+            analyses: HashMap::new(),
+            client,
+            config: Config::default(),
+            documents: HashMap::new()
+        }
+    }
+
     async fn try_update_config(&mut self) -> Option<Config> {
         let value = self
             .client
@@ -106,15 +113,15 @@ impl PestLanguageServerImpl {
 
     pub async fn did_open(&mut self, params: DidOpenTextDocumentParams) {
         let DidOpenTextDocumentParams { text_document } = params;
-        self.client
-            .log_message(MessageType::INFO, format!("Opening {}", text_document.uri))
-            .await;
-
-        if self.upsert_document(text_document).is_some() {
+        if self
+            .documents
+            .insert(text_document.uri.clone(), text_document)
+            .is_some()
+        {
             self.client
                 .log_message(
-                    MessageType::INFO,
-                    "\tReopened already tracked document.".to_string()
+                    MessageType::ERROR,
+                    "Reopened already tracked document.".to_string()
                 )
                 .await;
         }
@@ -130,74 +137,32 @@ impl PestLanguageServerImpl {
         } = params;
         let VersionedTextDocumentIdentifier { uri, version } = text_document;
 
-        for change in content_changes.into_iter() {
-            let updated_doc =
-                TextDocumentItem::new(uri.clone(), "pest".to_owned(), version, change.text);
-
-            if self.upsert_document(updated_doc).is_none() {
-                self.client
-                    .log_message(
-                        MessageType::INFO,
-                        format!("Updated untracked document {}", uri)
-                    )
-                    .await;
-            }
-
-            let diagnostics = self.reload().await;
-            self.send_diagnostics(diagnostics).await;
-        }
-    }
-
-    pub async fn did_change_watched_files(&mut self, params: DidChangeWatchedFilesParams) {
-        let DidChangeWatchedFilesParams { changes } = params;
-        let uris: Vec<_> = changes
-            .into_iter()
-            .map(|FileEvent { uri, typ }| {
-                assert_eq!(typ, FileChangeType::DELETED);
-                uri
-            })
-            .collect();
-
-        let mut diagnostics = Diagnostics::new();
-
-        for uri in uris {
+        let Some(change) = content_changes.into_iter().next_back() else {
             self.client
-                .log_message(
-                    MessageType::INFO,
-                    format!("Deleting removed document {}", uri)
-                )
+                .log_message(MessageType::ERROR, "Editor returned empty change vector")
                 .await;
+            return;
+        };
 
-            match self.remove_document(&uri) {
-                Some(removed) => {
-                    let empty_diagnostics = create_empty_diagnostics(uri.clone(), &removed);
-                    if diagnostics.insert(uri, empty_diagnostics).is_some() {
-                        self.client
-                            .log_message(MessageType::WARNING, "\tDuplicate URIs in event payload")
-                            .await;
-                    }
-                }
-                None => {
-                    self.client
-                        .log_message(
-                            MessageType::WARNING,
-                            "\tAttempted to delete untracked document"
-                        )
-                        .await;
-                }
-            }
-        }
+        let updated_doc =
+            TextDocumentItem::new(uri.clone(), "pest".to_owned(), version, change.text);
+        let Some(document) = self.documents.get_mut(&uri) else {
+            self.client
+                .log_message(MessageType::ERROR, "Editor changed nonexistent document")
+                .await;
+            return;
+        };
 
-        diagnostics.extend(self.reload().await);
+        *document = updated_doc;
+        let diagnostics = self.reload().await;
         self.send_diagnostics(diagnostics).await;
     }
 
     pub async fn did_delete_files(&mut self, params: DeleteFilesParams) {
         let files = params.files;
-        let mut uris = Vec::with_capacity(files.len());
         for file in files {
             match Url::parse(&file.uri) {
-                Ok(uri) => uris.push(uri),
+                Ok(uri) => _ = self.documents.remove(&uri),
                 Err(e) => {
                     self.client
                         .log_message(MessageType::ERROR, format!("Failed to parse URI {e}"))
@@ -206,34 +171,8 @@ impl PestLanguageServerImpl {
             }
         }
 
-        let mut diagnostics = Diagnostics::new();
-
-        self.client
-            .log_message(MessageType::INFO, format!("Deleting {} files", uris.len()))
-            .await;
-
-        for uri in uris {
-            let removed = self.remove_documents_in_dir(&uri);
-            for (uri, params) in removed {
-                self.client
-                    .log_message(MessageType::INFO, format!("\tDeleted {uri}"))
-                    .await;
-
-                if diagnostics.insert(uri, params).is_some() {
-                    self.client
-                        .log_message(
-                            MessageType::INFO,
-                            "\tDuplicate URIs in event payload".to_string()
-                        )
-                        .await;
-                }
-            }
-        }
-
-        if !diagnostics.is_empty() {
-            diagnostics.extend(self.reload().await);
-            self.send_diagnostics(diagnostics).await;
-        }
+        let diagnostics = self.reload().await;
+        self.send_diagnostics(diagnostics).await;
     }
 
     pub fn code_action(&self, params: CodeActionParams) -> Option<CodeActionResponse> {
@@ -275,18 +214,17 @@ impl PestLanguageServerImpl {
         text_document: &TextDocumentIdentifier,
         range: Range
     ) -> Option<CodeAction> {
-        let ((name, ra), occurence) = analysis.rules.iter().find_map(|ra| {
+        let ((name, ra), reference) = analysis.rules.iter().find_map(|pair @ (_, ra)| {
             Some((
-                ra,
-                ra.1.occurrences
+                pair,
+                ra.references
                     .iter()
-                    .filter(|occurence| *occurence != &ra.1.identifier_location)
-                    .find(|occurence| occurence.range.contains(range))?
+                    .find(|reference| reference.contains(range))?
             ))
         })?;
 
         let edit = vec![TextEdit {
-            range: occurence.range,
+            range: *reference,
             new_text: ra.expression.clone()
         }];
 
@@ -312,28 +250,25 @@ impl PestLanguageServerImpl {
         text_document: &TextDocumentIdentifier,
         range: Range
     ) -> Option<CodeAction> {
-        let (name, ra) = analysis.rules.iter().find(|ra| {
-            ra.1.occurrences
-                .iter()
-                .any(|occurence| occurence.range.contains(range))
+        let (name, ra) = analysis.rules.iter().find(|(_, ra)| {
+            (ra.identifier_location.contains(range) && !ra.references.is_empty())
+                || ra
+                    .references
+                    .iter()
+                    .any(|reference| reference.contains(range))
         })?;
-
-        if ra.occurrences.len() == 1 {
-            return None;
-        }
 
         let rule_expression = ra.expression.clone();
 
         let edits = ra
-            .occurrences
+            .references
             .iter()
-            .filter(|occurence| ra.identifier_location.range != occurence.range)
-            .map(|occurrence| TextEdit {
-                range: occurrence.range,
+            .map(|reference| TextEdit {
+                range: *reference,
                 new_text: rule_expression.clone()
             })
             .chain(iter::once(TextEdit {
-                range: ra.definition_location.range,
+                range: ra.definition_location,
                 new_text: String::new()
             }))
             .collect();
@@ -378,7 +313,7 @@ impl PestLanguageServerImpl {
         let selected_token = ra
             .tokens
             .iter()
-            .find(|(_, location)| location.range.contains(range));
+            .find(|(_, location)| location.contains(range));
 
         let (extracted_token, extracted_token_location) = selected_token?;
         let extracted_rule_name = (0..)
@@ -395,7 +330,7 @@ impl PestLanguageServerImpl {
         );
 
         let pos = Position {
-            line: extracted_token_location.range.end.line + 1,
+            line: extracted_token_location.end.line + 1,
             character: 0
         };
 
@@ -409,7 +344,7 @@ impl PestLanguageServerImpl {
                 new_text: format!("{prefix}{extracted_rule}\n",)
             },
             TextEdit {
-                range: extracted_token_location.range,
+                range: *extracted_token_location,
                 new_text: extracted_rule_name.clone()
             },
         ];
@@ -448,9 +383,9 @@ impl PestLanguageServerImpl {
         let rule_completions = analysis
             .rules
             .iter()
-            .filter(|(i, _)| i.starts_with(partial_identifier))
-            .map(|(i, ra)| CompletionItem {
-                label: i.to_owned(),
+            .filter(|(name, _)| name.starts_with(partial_identifier))
+            .map(|(name, ra)| CompletionItem {
+                label: name.to_owned(),
                 kind: Some(CompletionItemKind::FIELD),
                 documentation: ra
                     .doc
@@ -497,7 +432,13 @@ impl PestLanguageServerImpl {
             return Some(hover);
         }
 
-        let ra = self.analyses.get(&document.uri)?.rules.get(identifier)?;
+        let ra = self
+            .analyses
+            .get(&document.uri)?
+            .rules
+            .iter()
+            .find(|(name, _)| *name == identifier)?
+            .1;
 
         let contents = HoverContents::Scalar(MarkedString::String(ra.doc.clone()?));
         let range = Some(range.into_range(text_document_position_params.position.line));
@@ -525,9 +466,9 @@ impl PestLanguageServerImpl {
         let edits = self
             .get_rule_analysis(&document.uri, old_identifier)
             .into_iter()
-            .flat_map(|ra| &ra.occurrences)
-            .map(|location| TextEdit {
-                range: location.range,
+            .flat_map(|ra| ra.references_and_identifier())
+            .map(|range| TextEdit {
+                range,
                 new_text: new_name.clone()
             })
             .map(OneOf::Left)
@@ -560,7 +501,7 @@ impl PestLanguageServerImpl {
         let range = line.get_word_range_at_idx(params.position.character as usize);
         let identifier = &str_range(line, &range);
 
-        let Location { range, .. } = self
+        let range = self
             .get_rule_analysis(&document.uri, identifier)?
             .definition_location;
         Some(Location { uri, range })
@@ -572,7 +513,8 @@ impl PestLanguageServerImpl {
             ..
         } = params;
 
-        let document = &self.documents[&text_document_position.text_document.uri];
+        let uri = text_document_position.text_document.uri;
+        let document = &self.documents[&uri];
 
         let mut lines = document.text.lines();
         let line = lines
@@ -582,7 +524,13 @@ impl PestLanguageServerImpl {
         let identifier = &str_range(line, &range);
 
         let rule_analysis = self.get_rule_analysis(&document.uri, identifier)?;
-        let locations = rule_analysis.occurrences.clone();
+        let locations = rule_analysis
+            .references_and_identifier()
+            .map(|range| Location {
+                uri: uri.clone(),
+                range
+            })
+            .collect();
         Some(locations)
     }
 
@@ -600,107 +548,82 @@ impl PestLanguageServerImpl {
         let range = Range::new(Position::new(0, 0), end);
         Some(vec![TextEdit::new(range, formatted)])
     }
-}
 
-impl PestLanguageServerImpl {
-    async fn analyse_document(
+    #[allow(deprecated)]
+    pub fn document_symbol(&self, params: DocumentSymbolParams) -> Option<DocumentSymbolResponse> {
+        let uri = params.text_document.uri;
+        let analysis = self.analyses.get(&uri)?;
+        Some(DocumentSymbolResponse::Flat(
+            analysis
+                .rules
+                .iter()
+                .map(|(name, ra)| SymbolInformation {
+                    name: name.to_owned(),
+                    kind: SymbolKind::FIELD,
+                    tags: None,
+                    // Stupid library forces me to specify a deprecated field like what
+                    deprecated: None,
+                    location: Location {
+                        uri: uri.clone(),
+                        range: ra.identifier_location
+                    },
+                    container_name: None
+                })
+                .collect()
+        ))
+    }
+
+    fn analyse_document(
         analyses: &mut HashMap<Url, Analysis>,
-        diagnostics: &mut Diagnostics,
         config: &Config,
-        url: Url,
+        uri: Url,
         document: &TextDocumentItem
-    ) -> Result<(), Vec<pest::error::Error<Rule>>> {
-        let pairs = parser::parse(parser::Rule::grammar_rules, document.text.as_str())
-            .map_err(|err| vec![err])?;
-        let analysis = analyses.entry(url.clone()).or_insert(Analysis {
-            doc_url: url.clone(),
+    ) -> Result<Vec<Diagnostic>, Vec<Error<Rule>>> {
+        let pairs =
+            parser::parse(Rule::grammar_rules, document.text.as_str()).map_err(|err| vec![err])?;
+        let analysis = analyses.entry(uri.clone()).or_insert(Analysis {
             rules: HashMap::new()
         });
+
         analysis.update_from(pairs.clone());
 
         let unused_diagnostics: Vec<_> = analysis
             .get_unused_rules()
-            .iter()
-            .filter(|(rule_name, _)| !config.always_used_rule_names.contains(rule_name))
-            .map(|(rule_name, rule_location)| Diagnostic {
-                range: rule_location.range,
+            .filter(|(rule_name, _)| {
+                !config
+                    .always_used_rule_names
+                    .iter()
+                    .any(|name| name == rule_name)
+            })
+            .map(|(rule_name, range)| Diagnostic {
+                range,
                 severity: Some(DiagnosticSeverity::WARNING),
                 source: Some("Pest Language Server".to_owned()),
                 message: format!("Rule {} is unused", rule_name),
                 ..Default::default()
             })
             .collect();
+        let unused_diagnostics = match unused_diagnostics.len() {
+            1 => vec![],
+            _ => unused_diagnostics
+        };
 
-        if unused_diagnostics.len() > 1 {
-            diagnostics
-                .entry(url.clone())
-                .or_insert_with(|| create_empty_diagnostics(url, document))
-                .diagnostics
-                .extend(unused_diagnostics);
-        }
-
-        validate_pairs(pairs)
+        validate_pairs(pairs).map(|_| unused_diagnostics)
     }
 
     async fn reload(&mut self) -> Diagnostics {
         self.client
             .log_message(MessageType::INFO, "Reloading all diagnostics".to_string())
             .await;
-        let mut diagnostics = Diagnostics::new();
+        self.documents
+            .iter()
+            .map(|(url, document)| {
+                let diagnostics =
+                    Self::analyse_document(&mut self.analyses, &self.config, url.clone(), document)
+                        .unwrap_or_else(|errors| errors.into_diagnostics());
 
-        for (url, document) in &self.documents {
-            self.client
-                .log_message(
-                    MessageType::INFO,
-                    format!("\tReloading diagnostics for {}", url)
-                )
-                .await;
-
-            if let Err(error) = Self::analyse_document(
-                &mut self.analyses,
-                &mut diagnostics,
-                &self.config,
-                url.clone(),
-                document
-            )
-            .await
-            {
-                let v = PublishDiagnosticsParams::new(
-                    url.clone(),
-                    error.into_diagnostics(),
-                    Some(document.version)
-                );
-
-                diagnostics.insert(url.clone(), v)
-            } else {
-                let empty_diagnostics = create_empty_diagnostics(url.clone(), document);
-                diagnostics.insert(url.clone(), empty_diagnostics)
-            };
-        }
-
-        diagnostics
-    }
-
-    fn upsert_document(&mut self, doc: TextDocumentItem) -> Option<TextDocumentItem> {
-        self.documents.insert(doc.uri.clone(), doc)
-    }
-
-    fn remove_document(&mut self, uri: &Url) -> Option<TextDocumentItem> {
-        self.documents.remove(uri)
-    }
-
-    fn remove_documents_in_dir(&mut self, dir: &Url) -> Diagnostics {
-        let (in_dir, not_in_dir): (Documents, Documents) =
-            self.documents.clone().into_iter().partition(|(uri, _)| {
-                let maybe_segments = dir.path_segments().zip(uri.path_segments());
-                let compare_paths = |(l, r): (Split<_>, Split<_>)| l.zip(r).all(|(l, r)| l == r);
-                maybe_segments.is_some_and(compare_paths)
-            });
-
-        self.documents = not_in_dir;
-        in_dir
-            .into_iter()
-            .map(|(url, doc)| (url.clone(), create_empty_diagnostics(url, &doc)))
+                PublishDiagnosticsParams::new(url.clone(), diagnostics, Some(document.version))
+            })
             .collect()
     }
 
@@ -709,7 +632,7 @@ impl PestLanguageServerImpl {
             uri,
             diagnostics,
             version
-        } in diagnostics.into_values()
+        } in diagnostics
         {
             self.client
                 .publish_diagnostics(uri.clone(), diagnostics, version)
