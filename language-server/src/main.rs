@@ -65,7 +65,7 @@ impl LanguageServer for PestLanguageServer {
     }
 
     async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
-        Ok(self.0.read().await.code_action(params))
+        Ok(Some(self.0.read().await.code_action(params).await))
     }
 
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {

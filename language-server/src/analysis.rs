@@ -1,9 +1,6 @@
 use std::{collections::HashMap, iter};
 
-use pest::{
-    Span,
-    iterators::{Pair, Pairs},
-};
+use pest::iterators::Pairs;
 use pest_meta::parser::Rule;
 use tower_lsp::lsp_types::Range;
 
@@ -20,6 +17,7 @@ pub struct RuleAnalysis {
     pub tokens: Vec<(String, Range)>,
     /// The rules expression, in [String] form.
     pub expression: String,
+    pub expression_range: Range,
     /// The occurrences of the rule, other than its definition.
     pub references: Vec<Range>,
     /// The rules documentation, in markdown.
@@ -35,71 +33,68 @@ pub struct Analysis {
 }
 
 impl Analysis {
-    /// Updates this analysis from the given pairs.
-    pub fn update_from(&mut self, pairs: Pairs<Rule>) {
-        let mut precending_docs = Vec::new();
+    pub fn new(pairs: Pairs<Rule>, capacity: Option<usize>) -> Self {
+        let mut precending_docs: Option<String> = None;
+        let mut rules = match capacity {
+            Some(capacity) => HashMap::with_capacity(capacity),
+            None => HashMap::new(),
+        };
+
         for pair in pairs
             .clone()
             .filter(|pair| pair.as_rule() == Rule::grammar_rule)
         {
-            let current_span = Some(pair.as_span());
+            let current_span = pair.as_span();
             let mut inner_pairs = pair.into_inner();
             let inner = inner_pairs.next().unwrap();
 
-            match inner.as_rule() {
-                Rule::line_doc => {
-                    precending_docs.extend(inner.into_inner().next().map(|pair| pair.as_str()))
+            match (inner.as_rule(), &mut precending_docs) {
+                (Rule::line_doc, Some(docs)) => {
+                    docs.push_str(inner.into_inner().next().unwrap().as_str());
+                    docs.push('\n');
                 }
-                Rule::identifier => self.new_rule(
-                    &pairs,
-                    current_span,
-                    &mut precending_docs,
-                    inner_pairs,
-                    inner,
-                ),
+
+                (Rule::line_doc, _) => {
+                    let mut docs = inner.into_inner().next().unwrap().as_str().to_string();
+                    docs.push('\n');
+                    precending_docs = Some(docs);
+                }
+
+                (Rule::identifier, _) => {
+                    let mut doc = precending_docs.take();
+                    if let Some(doc) = &mut doc {
+                        doc.pop();
+                    }
+
+                    let expression_pair = inner_pairs
+                        .find(|r| r.as_rule() == Rule::expression)
+                        .expect("rule should contain expression");
+                    let expression = expression_pair.as_str().to_owned();
+                    let expression_range = expression_pair.as_span().into_range();
+                    let tokens = expression_pair
+                        .into_inner()
+                        .map(|e| (e.as_str().to_owned(), e.as_span().into_range()))
+                        .collect();
+                    let references = pairs.clone().find_references(inner.as_span());
+
+                    let definition_location = current_span.into_range();
+                    let identifier_location = inner.as_span().into_range();
+                    let analisys = RuleAnalysis {
+                        identifier_location,
+                        definition_location,
+                        tokens,
+                        expression,
+                        expression_range,
+                        references,
+                        doc,
+                    };
+                    rules.insert(inner.as_str().to_owned(), analisys);
+                }
                 _ => {}
             }
         }
-    }
 
-    fn new_rule(
-        &mut self,
-        pairs: &Pairs<'_, Rule>,
-        current_span: Option<Span<'_>>,
-        precending_docs: &mut Vec<&str>,
-        mut inner_pairs: Pairs<'_, Rule>,
-        inner: Pair<'_, Rule>,
-    ) {
-        let expression_pair = inner_pairs
-            .find(|r| r.as_rule() == Rule::expression)
-            .expect("rule should contain expression");
-        let expression = expression_pair.as_str().to_owned();
-        let tokens = expression_pair
-            .into_inner()
-            .map(|e| (e.as_str().to_owned(), e.as_span().into_range()))
-            .collect();
-        let references = pairs.clone().find_references(inner.as_span());
-
-        let doc = if precending_docs.is_empty() {
-            None
-        } else {
-            Some(precending_docs.join("\n"))
-        };
-        precending_docs.clear();
-
-        let definition_location = current_span
-            .expect("rule should have a defined span")
-            .into_range();
-        let identifier_location = inner.as_span().into_range();
-        let analisys = RuleAnalysis {
-            identifier_location,
-            definition_location,
-            tokens,
-            expression,
-            references,
-            doc,
-        };
-        self.rules.insert(inner.as_str().to_owned(), analisys);
+        Analysis { rules }
     }
 
     pub fn unused_rules(&self) -> impl Iterator<Item = (&str, Range)> {

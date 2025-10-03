@@ -20,7 +20,6 @@ use tower_lsp::{
         VersionedTextDocumentIdentifier, WorkspaceEdit,
     },
 };
-use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
     analysis::{Analysis, RuleAnalysis},
@@ -175,45 +174,49 @@ impl PestLanguageServerImpl {
         self.send_diagnostics(diagnostics).await;
     }
 
-    pub fn code_action(&self, params: CodeActionParams) -> Option<CodeActionResponse> {
+    pub async fn code_action(&self, params: CodeActionParams) -> CodeActionResponse {
         let CodeActionParams {
             context,
             range,
-            text_document,
+            text_document: TextDocumentIdentifier { uri },
             ..
         } = params;
         let only = context.only.as_ref();
-        let analysis = self.analyses.get(&text_document.uri)?;
+        let Some(analysis) = self.analyses.get(&uri) else {
+            self.client
+                .log_message(
+                    MessageType::ERROR,
+                    "Editor requested code action on untracked document",
+                )
+                .await;
+            return Vec::new();
+        };
+
+        let extract = only
+            .is_none_or(|only| only.contains(&CodeActionKind::REFACTOR_EXTRACT))
+            .then(|| self.refactor_extract(uri.clone(), analysis, range))
+            .into_iter()
+            .flatten();
+
         let inline_all = only
             .is_none_or(|only| only.contains(&CodeActionKind::REFACTOR_INLINE))
-            .then(|| self.refactor_inline_all(analysis, &text_document, range))
+            .then(|| self.refactor_inline_all(uri.clone(), analysis, range))
             .flatten();
 
         let inline = only
             .is_none_or(|only| only.contains(&CodeActionKind::REFACTOR_INLINE))
-            .then(|| self.refactor_inline(analysis, &text_document, range))
+            .then(|| self.refactor_inline(uri, analysis, range))
             .flatten();
 
-        let extract = only
-            .is_none_or(|only| only.contains(&CodeActionKind::REFACTOR_EXTRACT))
-            .then(|| self.refactor_extract(range, text_document))
-            .flatten();
-
-        let actions = inline_all
+        inline_all
             .into_iter()
             .chain(extract)
             .chain(inline)
             .map(CodeActionOrCommand::CodeAction)
-            .collect();
-        Some(actions)
+            .collect()
     }
 
-    fn refactor_inline(
-        &self,
-        analysis: &Analysis,
-        text_document: &TextDocumentIdentifier,
-        range: Range,
-    ) -> Option<CodeAction> {
+    fn refactor_inline(&self, uri: Url, analysis: &Analysis, range: Range) -> Option<CodeAction> {
         let ((name, ra), reference) = analysis.rules.iter().find_map(|pair @ (_, ra)| {
             Some((
                 pair,
@@ -223,12 +226,18 @@ impl PestLanguageServerImpl {
             ))
         })?;
 
+        let new_text = if ra.tokens.len() == 1 {
+            ra.expression.trim().to_string()
+        } else {
+            format!("({})", ra.expression.trim())
+        };
+
         let edit = vec![TextEdit {
             range: *reference,
-            new_text: format!("({})", ra.expression),
+            new_text,
         }];
 
-        let change = HashMap::from_iter(iter::once((text_document.uri.clone(), edit)));
+        let change = HashMap::from_iter(iter::once((uri, edit)));
 
         let edit = Some(WorkspaceEdit {
             changes: Some(change),
@@ -246,8 +255,8 @@ impl PestLanguageServerImpl {
 
     fn refactor_inline_all(
         &self,
+        uri: Url,
         analysis: &Analysis,
-        text_document: &TextDocumentIdentifier,
         range: Range,
     ) -> Option<CodeAction> {
         let (name, ra) = analysis.rules.iter().find(|(_, ra)| {
@@ -258,14 +267,18 @@ impl PestLanguageServerImpl {
                     .any(|reference| reference.contains(range))
         })?;
 
-        let rule_expression = ra.expression.clone();
+        let new_text = if ra.tokens.len() == 1 {
+            ra.expression.trim().to_string()
+        } else {
+            format!("({})", ra.expression.trim())
+        };
 
         let edits = ra
             .references
             .iter()
             .map(|reference| TextEdit {
                 range: *reference,
-                new_text: format!("({rule_expression})"),
+                new_text: new_text.clone(),
             })
             .chain(iter::once(TextEdit {
                 range: ra.definition_location,
@@ -273,7 +286,7 @@ impl PestLanguageServerImpl {
             }))
             .collect();
 
-        let changes = HashMap::from_iter(iter::once((text_document.uri.clone(), edits)));
+        let changes = HashMap::from_iter(iter::once((uri, edits)));
 
         let edit = Some(WorkspaceEdit {
             changes: Some(changes),
@@ -289,67 +302,46 @@ impl PestLanguageServerImpl {
         })
     }
 
-    fn refactor_extract(
-        &self,
-        range: Range,
-        text_document: TextDocumentIdentifier,
-    ) -> Option<CodeAction> {
-        let document = &self.documents[&text_document.uri];
-        let line = document
-            .text
-            .lines()
-            .nth(range.start.line as usize)
-            .unwrap_or("");
+    fn refactor_extract(&self, uri: Url, analysis: &Analysis, range: Range) -> Option<CodeAction> {
+        let (name, ra) = analysis
+            .rules
+            .iter()
+            .find(|(_, ra)| ra.expression_range.contains(range))?;
 
-        let rule_name_start_idx = line
-            .graphemes(true)
-            .take_while(|grapheme| *grapheme == " ")
-            .count();
-
-        let name_range = line.word_range_at_idx(rule_name_start_idx);
-        let rule_name = &str_range(line, &name_range);
-
-        let ra = self.rule_analysis(&text_document.uri, rule_name)?;
-        let selected_token = ra
+        let (token, range) = ra
             .tokens
             .iter()
-            .find(|(_, location)| location.contains(range));
+            .find(move |(_, token_range)| token_range.contains(range))?;
+        let token = token.trim();
+        let line = ra.expression_range.end.line + 1;
 
-        let (extracted_token, extracted_token_location) = selected_token?;
         let extracted_rule_name = (0..)
-            .map(|rule_name_number| format!("{}_{}", rule_name, rule_name_number))
-            .find(|extracted_rule_name| {
-                self.rule_analysis(&text_document.uri, extracted_rule_name)
-                    .is_none()
-            })?;
-
-        let extracted_rule = format!(
-            "{} = {{ {} }}",
+            .map(|num| format!("{name}_{num}"))
+            .find(|name| !analysis.rules.contains_key(name))
+            .expect("Iterator is infinite");
+        let new_text = format!(
+            "\n{} = {{ {} }}\n",
             extracted_rule_name.trim(),
-            extracted_token.trim(),
+            token.trim(),
         );
 
-        let pos = Position {
-            line: extracted_token_location.end.line + 1,
-            character: 0,
-        };
+        let pos = Position { line, character: 0 };
 
-        let prefix = if line.ends_with('\n') { "" } else { "\n" };
         let edits = vec![
             TextEdit {
                 range: Range {
                     start: pos,
                     end: pos,
                 },
-                new_text: format!("{prefix}{extracted_rule}\n",),
+                new_text,
             },
             TextEdit {
-                range: *extracted_token_location,
+                range: *range,
                 new_text: extracted_rule_name.clone(),
             },
         ];
 
-        let changes = HashMap::from_iter(iter::once((text_document.uri.clone(), edits)));
+        let changes = HashMap::from_iter(iter::once((uri.clone(), edits)));
 
         let edit = Some(WorkspaceEdit {
             changes: Some(changes),
@@ -358,7 +350,7 @@ impl PestLanguageServerImpl {
         });
 
         Some(CodeAction {
-            title: format!("Extract {extracted_token} into {extracted_rule_name}"),
+            title: format!("Extract {token} into {extracted_rule_name}"),
             kind: Some(CodeActionKind::REFACTOR_EXTRACT),
             edit,
             ..Default::default()
@@ -574,19 +566,14 @@ impl PestLanguageServerImpl {
     }
 
     fn analyse_document(
-        analyses: &mut HashMap<Url, Analysis>,
         config: &Config,
-        uri: Url,
         document: &TextDocumentItem,
-    ) -> Result<Vec<Diagnostic>, Vec<Error<Rule>>> {
+        capacity: Option<usize>,
+    ) -> Result<(Analysis, Vec<Diagnostic>), Vec<Error<Rule>>> {
         let pairs =
             parser::parse(Rule::grammar_rules, document.text.as_str()).map_err(|err| vec![err])?;
-        let analysis = analyses.entry(uri.clone()).or_insert(Analysis {
-            rules: HashMap::new(),
-        });
 
-        analysis.update_from(pairs.clone());
-
+        let analysis = Analysis::new(pairs.clone(), capacity);
         let unused_rules = analysis.unused_rules();
         let mut unused_diagnostics: Vec<_> = unused_rules
             .filter(|(rule_name, _)| {
@@ -608,7 +595,7 @@ impl PestLanguageServerImpl {
             unused_diagnostics.clear();
         }
 
-        validate_pairs(pairs).map(|_| unused_diagnostics)
+        validate_pairs(pairs).map(|_| (analysis, unused_diagnostics))
     }
 
     async fn reload(&mut self) -> Diagnostics {
@@ -618,9 +605,17 @@ impl PestLanguageServerImpl {
         self.documents
             .iter()
             .map(|(url, document)| {
-                let diagnostics =
-                    Self::analyse_document(&mut self.analyses, &self.config, url.clone(), document)
-                        .unwrap_or_else(|errors| errors.into_diagnostics());
+                let capacity = self
+                    .analyses
+                    .get(url)
+                    .map(|analysis| analysis.rules.capacity());
+                let diagnostics = match Self::analyse_document(&self.config, document, capacity) {
+                    Ok((analysis, diagnostics)) => {
+                        self.analyses.insert(url.clone(), analysis);
+                        diagnostics
+                    }
+                    Err(errors) => errors.into_diagnostics(),
+                };
 
                 PublishDiagnosticsParams::new(url.clone(), diagnostics, Some(document.version))
             })
