@@ -74,7 +74,7 @@ export async function findServer(): Promise<string | undefined> {
 					}
 				}
 			}
-		} catch (_) {
+		} catch {
 			outputChannel.appendLine("[TS] Failed to run update check.");
 		}
 	}
@@ -174,7 +174,7 @@ async function checkValidity(path: string): Promise<boolean> {
 	try {
 		await stat(path);
 		return true;
-	} catch (_) {
+	} catch {
 		return false;
 	}
 }
