@@ -25,20 +25,44 @@
             rust-overlay.overlays.default
           ];
         };
+        rustToolchain = (
+          pkgs.rust-bin.stable.latest.default.override {
+            extensions = [
+              "rust-src"
+              "rust-analyzer"
+            ];
+          }
+        );
 
       in
       {
+        packages = rec {
+          pest-ide-tools =
+            (pkgs.makeRustPlatform {
+              rustc = rustToolchain;
+              cargo = rustToolchain;
+            }).buildRustPackage
+              rec {
+                name = "pest-langage-server";
+                src = pkgs.lib.cleanSource ./.;
+                cargoLock = {
+                  lockFile = ./Cargo.lock;
+                  allowBuiltinFetchGit = true;
+                };
+
+                meta.mainProgram = name;
+              };
+          default = pest-ide-tools;
+        };
+
         devShell = pkgs.mkShell {
           packages = with pkgs; [
+            (lib.hiPrio rust-bin.nightly.latest.rustfmt)
             go-task
             nodejs
             prettier
-            (rust-bin.stable.latest.default.override {
-              extensions = [
-                "rust-src"
-                "rust-analyzer"
-              ];
-            })
+            rustToolchain
+            typescript-language-server
           ];
         };
       }
