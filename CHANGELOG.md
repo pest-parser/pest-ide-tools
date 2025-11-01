@@ -6,6 +6,10 @@ All notable changes will be documented in this file.
 ## v0.3.12
 
 - feat: add support for PUSH_LITERAL
+- feat: add symbol picker
+- refactor: huge code cleanup
+- feat: improve code actions
+- perf: performance improvements
 
 ## v0.3.11
 
