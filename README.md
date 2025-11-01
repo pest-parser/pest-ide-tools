@@ -21,7 +21,7 @@ Rust, for the Pest parser generator.
 - Inline and extract rules.
 - Full-unicode support.
 - Formatting.
-- Update checking.
+- Rule picker
 
 Please see the
 [issues page](https://github.com/pest-parser/pest-ide-tools/issues) to suggest
