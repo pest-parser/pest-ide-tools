@@ -580,7 +580,9 @@ impl PestLanguageServerImpl {
                 !config
                     .always_used_rule_names
                     .iter()
-                    .any(|name| name == rule_name)
+                    .map(String::as_str)
+                    .chain(["WHITESPACE", "COMMENT"])
+                    .any(|name| name == *rule_name)
             })
             .map(|(rule_name, range)| Diagnostic {
                 range,
