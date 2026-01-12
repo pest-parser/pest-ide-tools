@@ -23,4 +23,4 @@ strum = "0.27.2"
 strum_macros = "0.27.2"
 tower-lsp = { version = "0.20.0", features = ["runtime-agnostic"], default-features = false }
 unicode-segmentation = "1.11.0"
-url = { version = "2.5.7", features = ["serde"] }
+url = { version = "2.5.8", features = ["serde"] }
