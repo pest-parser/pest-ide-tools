@@ -901,9 +901,9 @@ dependencies = [
 
 [[package]]
 name = "pest_meta"
-version = "2.8.2"
+version = "2.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42919b05089acbd0a5dcd5405fb304d17d1053847b81163d09c4ad18ce8e8420"
+checksum = "602113b5b5e8621770cfd490cfd90b9f84ab29bd2b0e49ad83eb6d186cef2365"
 dependencies = [
  "pest",
  "sha2",
