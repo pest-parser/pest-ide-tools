@@ -12,7 +12,7 @@ repository = "https://github.com/pest-parser/pest-ide-tools"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "4.5.54", features = ["cargo"] }
+clap = { version = "4.5.57", features = ["cargo"] }
 pest = "2.8.5"
 pest_fmt = "0.2.5"
 pest_meta = {version = "2.8.5", features = ["grammar-extras"]}
