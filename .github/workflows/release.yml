@@ -105,7 +105,6 @@ jobs:
         target:
           [
             { runner: "macos-14", target: "aarch64-apple-darwin", os: darwin, arch: aarch64 }, # Apple silicon
-            { runner: "ubuntu-latest", target: "aarch64-unknown-linux-gnu", os: linux, arch: aarch64 },
             { runner: "macos-12", target: "x86_64-apple-darwin", os: darwin, arch: x86_64 }, # Intel Mac
             { runner: "ubuntu-latest", target: "x86_64-pc-windows-gnu", os: windows, arch: x86_64 }, # It's trivial to cross-compile to Windows (less so for Mac)
             { runner: "ubuntu-latest", target: "x86_64-unknown-linux-gnu", os: linux, arch: x86_64 },
@@ -125,13 +124,7 @@ jobs:
       - name: Set up Windows
         if: matrix.target.os == 'windows'
         run: sudo apt-get install -y --no-install-recommends mingw-w64 musl-tools gcc-mingw-w64-x86-64-win32
-
-      - name: Set up aarch64 Linux
-        if: matrix.target.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          sudo apt-get install gcc-aarch64-linux-gnu
-          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
-
+        
       - name: Build binary
         run: cargo build --release --target=${{ matrix.target.target }}
 
