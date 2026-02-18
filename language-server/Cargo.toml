@@ -13,7 +13,7 @@ repository = "https://github.com/pest-parser/pest-ide-tools"
 
 [dependencies]
 clap = { version = "4.5.58", features = ["cargo"] }
-pest = "2.8.5"
+pest = "2.8.6"
 pest_fmt = "0.2.5"
 pest_meta = {version = "2.8.5", features = ["grammar-extras"]}
 serde = { version = "1.0.197", features = ["derive"] }
