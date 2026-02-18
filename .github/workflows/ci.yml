@@ -47,7 +47,7 @@ jobs:
         run: npm run package
 
       - name: Upload Extension
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: pest-vscode
           path: vscode/pest.vsix
@@ -63,7 +63,7 @@ jobs:
         run: zip pest.sublime-package *
 
       - name: Upload Extension
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: pest-sublime-text
           path: sublime-text/pest.sublime-package
