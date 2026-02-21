@@ -1,9 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-// eslint-disable-next-line prettier/prettier
-
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { outputChannel } from ".";
 import { exec, ExecException, spawn } from "child_process";
 import { stat } from "fs/promises";
