@@ -15,7 +15,7 @@
     "Formatters",
     "Programming Languages"
   ],
-  "version": "0.3.12",
+  "version": "0.3.13",
   "repository": {
     "type": "git",
     "url": "https://github.com/pest-parser/pest-ide-tools"
