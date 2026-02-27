@@ -20,7 +20,7 @@ serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.149"
 smol = "2.0.2"
 strum = "0.28.0"
-strum_macros = "0.27.2"
+strum_macros = "0.28.0"
 tower-lsp = { version = "0.20.0", features = ["runtime-agnostic"], default-features = false }
 unicode-segmentation = "1.11.0"
 url = { version = "2.5.8", features = ["serde"] }
