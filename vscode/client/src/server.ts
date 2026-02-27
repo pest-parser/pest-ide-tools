@@ -19,9 +19,9 @@ export async function findServer(): Promise<string | undefined> {
 	const updateCheckerEnabled = config.get("checkForUpdates") as boolean;
 
 	// use quotes around path because the path may have spaces in it
-	const currentVersion = await promisify(exec)(`"${path}" --version`).then(s =>
-		s.stdout.trim(),
-	);
+	const currentVersion = await promisify(exec)(
+		`"${path}" --version | awk '{print $2}'`,
+	).then(s => s.stdout.trim());
 	outputChannel.appendLine(`[TS] Server version: v${currentVersion}`);
 
 	if (updateCheckerEnabled && config.get("serverPath") === null) {
