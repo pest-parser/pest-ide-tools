@@ -4,6 +4,10 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 <!-- Only update the CHANGELOG.md file in the root of the repository - symlink should keep vscode/CHANGELOG.md identical. -->
+## v0.3.14
+
+- fix(vscode): parse version number from `--version` output without `awk`
+
 ## v0.3.13
 
 - fix(vscode): parse version number correctly from `--version` output using `awk`
