@@ -4,6 +4,10 @@ All notable changes will be documented in this file.
 
 <!-- Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file. -->
 
+## v0.3.13
+
+- fix(vscode): parse version number correctly from `--version` output using `awk`
+
 ## v0.3.11
 
 - fix(ci): update Node version for OpenVSX publishing.
