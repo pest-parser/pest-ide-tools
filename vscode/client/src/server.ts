@@ -19,9 +19,8 @@ export async function findServer(): Promise<string | undefined> {
 	const updateCheckerEnabled = config.get("checkForUpdates") as boolean;
 
 	// use quotes around path because the path may have spaces in it
-	const currentVersion = await promisify(exec)(
-		`"${path}" --version | awk '{print $2}'`,
-	).then(s => s.stdout.trim());
+	const { stdout } = await promisify(exec)(`"${path}" --version`);
+	const currentVersion = stdout.trim().split(/\s+/)[1] ?? "unknown";
 	outputChannel.appendLine(`[TS] Server version: v${currentVersion}`);
 
 	if (updateCheckerEnabled && config.get("serverPath") === null) {
@@ -81,16 +80,21 @@ async function findServerPath(): Promise<string | undefined> {
 
 	// Check for custom server path
 	if (config.get("serverPath") && workspace.workspaceFolders !== undefined) {
-		outputChannel.appendLine(
-			path.resolve(
-				workspace.workspaceFolders[0].uri.fsPath,
-				config.get("serverPath") as string,
-			),
-		);
-		return path.resolve(
+		const resolvedPath = path.resolve(
 			workspace.workspaceFolders[0].uri.fsPath,
 			config.get("serverPath") as string,
 		);
+		outputChannel.appendLine(resolvedPath);
+
+		// On Windows, try adding .exe suffix if the path doesn't exist
+		if (process.platform === "win32" && !(await checkValidity(resolvedPath))) {
+			const exePath = resolvedPath + ".exe";
+			if (await checkValidity(exePath)) {
+				return exePath;
+			}
+		}
+
+		return resolvedPath;
 	}
 
 	const cargoBinDirectory = getCargoBinDirectory();
