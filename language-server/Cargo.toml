@@ -22,5 +22,5 @@ smol = "2.0.2"
 strum = "0.28.0"
 strum_macros = "0.28.0"
 tower-lsp = { version = "0.20.0", features = ["runtime-agnostic"], default-features = false }
-unicode-segmentation = "1.11.0"
+unicode-segmentation = "1.13.2"
 url = { version = "2.5.8", features = ["serde"] }
